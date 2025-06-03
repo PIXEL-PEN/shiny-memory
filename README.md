@@ -3,7 +3,7 @@ A learning project to modify Markor metadata -- change hard-coded date format fr
 
 Integrate a Yearly Journal Organizer module with categories first created in html/GUI.
 
-Add Year/Monthly tree folder GUI in html in conjunction with Yearly Journal Organizer.
+Add Year/Monthly folder tree GUI in html in conjunction with Yearly Journal Organizer.
 
 Year overview GUI further to Yearly Journal.
 
