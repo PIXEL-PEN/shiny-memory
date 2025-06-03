@@ -61,6 +61,14 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.text.DateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+
+
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class GsFileBrowserListAdapter extends RecyclerView.Adapter<GsFileBrowserListAdapter.FilesystemViewerViewHolder> implements Filterable, View.OnClickListener, View.OnLongClickListener {
@@ -284,13 +292,13 @@ public class GsFileBrowserListAdapter extends RecyclerView.Adapter<GsFileBrowser
         _layoutManager = (LinearLayoutManager) view.getLayoutManager();
         reloadCurrentFolder();
     }
-
     public String formatFileDescription(final File file, String format) {
         if (TextUtils.isEmpty(format)) {
-            return DateUtils.formatDateTime(_context, file.lastModified(), (DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_YEAR | DateUtils.FORMAT_NUMERIC_DATE));
+            DateFormat df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, Locale.getDefault());
+            return df.format(new Date(file.lastModified()));
         } else {
             format = format.replaceAll("FS(?=([^']*'[^']*')*[^']*$)", '\'' + GsFileUtils.getHumanReadableByteCountSI(file.length()) + '\'');
-            return new SimpleDateFormat(format, Locale.getDefault()).format(file.lastModified());
+            return new SimpleDateFormat(format, Locale.getDefault()).format(new Date(file.lastModified()));
         }
     }
 
