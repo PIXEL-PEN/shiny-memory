@@ -12,7 +12,9 @@ Year overview GUI further to Yearly Journal.
 Past Years TimeLine.
 
 
-![Screenshot_20250604_013338](https://github.com/user-attachments/assets/615746a8-510f-4526-ad22-9aea975d0ee0)
+![Screenshot_20250605_094623](https://github.com/user-attachments/assets/27059d23-164d-48b5-b1ff-f0f9101a6e14)
+
+![Screenshot_20250605_204359](https://github.com/user-attachments/assets/f9ddb797-5fed-4ae7-a973-8a2fe4d621eb)
 
 
 ![Screenshot_20250523_132949](https://github.com/user-attachments/assets/5c8315fd-30d3-4696-99cf-edf0763e58da)
