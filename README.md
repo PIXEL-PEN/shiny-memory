@@ -3,7 +3,7 @@
 # shiny-memory
 A learning project to modify Markor metadata -- change hard-coded date format from US to non-US -- add 'Date Created' alongside 'Date Modified' on file names.
 
-Integrate a Yearly Journal Organizer module with categories first created in html/GUI.
+Integrate a Yearly Journal Organizer & Calendar module with categories first created in html/GUI.
 
 Add Year/Monthly folder tree GUI in html in conjunction with Yearly Journal Organizer.
 
