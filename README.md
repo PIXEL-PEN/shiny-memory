@@ -1,7 +1,9 @@
 
 
 # shiny-memory
-A learning project to modify Markor metadata -- change hard-coded date format from US to non-US -- add 'Date Created' alongside 'Date Modified' on file names.
+A learning project to modify Markor metadata -- change hard-coded date format from US to non-US --- dd-mm-yyyy plus add 'Date Created' alongside 'Date Modified' on file names.
+
+Longer term:
 
 Integrate a Yearly Journal Organizer & Calendar module with categories first created in html/GUI.
 
