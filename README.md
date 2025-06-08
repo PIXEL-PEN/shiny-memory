@@ -5,11 +5,15 @@ A learning project to modify Markor metadata -- change hard-coded date format fr
 
 Longer term:
 
-Integrate a Yearly Journal Organizer & Calendar module with categories first created in html/GUI.
+Integrate a Yearly Journal Organizer & Calendar module with categories first created in html.
 
-Add Year/Monthly folder tree GUI in html in conjunction with Yearly Journal Organizer.
+Add Markor Folder Tree html (python generated) in conjunction with Yearly Journal Organizer.
 
-Year overview GUI further to Yearly Journal.
+Markor Folder Tree renders collapsible views of all folders with linked files for convenient context views. 
+Requires Termux, python. ReadMe: [generate_markor_tree.txt](https://github.com/user-attachments/files/20643558/generate_markor_tree.txt)
+
+
+Year Overview html extending Yearly Journal Organizer.
 
 Past Years TimeLine.
 
@@ -19,7 +23,8 @@ Past Years TimeLine.
 ![Screenshot_20250605_204359](https://github.com/user-attachments/assets/f9ddb797-5fed-4ae7-a973-8a2fe4d621eb)
 
 
-![Screenshot_20250523_132949](https://github.com/user-attachments/assets/5c8315fd-30d3-4696-99cf-edf0763e58da)
+![Screenshot_20250608_153526](https://github.com/user-attachments/assets/676845a7-605c-4da2-a501-8f3bce6a2169)
+
 
 
 ![year_overview_phone](https://github.com/user-attachments/assets/fad0559d-8d80-41dd-b422-48c9894179c5)
