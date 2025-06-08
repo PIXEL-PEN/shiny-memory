@@ -10,8 +10,7 @@ Integrate a Yearly Journal Organizer & Calendar module with categories first cre
 Add Markor Folder Tree html (python generated) in conjunction with Yearly Journal Organizer.
 
 Markor Folder Tree renders collapsible views of all folders with linked files for convenient context views. 
-Requires Termux, python. ReadMe: [generate_markor_tree.txt](https://github.com/user-attachments/files/20643558/generate_markor_tree.txt)
-
+Requires Termux, python. ReadMe: [MARKOR TREE READ-ME.md](https://github.com/user-attachments/files/20643621/MARKOR.TREE.READ-ME.md)
 
 Year Overview html extending Yearly Journal Organizer.
 
