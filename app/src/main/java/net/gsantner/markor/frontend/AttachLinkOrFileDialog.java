@@ -43,6 +43,11 @@ import net.gsantner.opoc.wrapper.GsCallback;
 
 import java.io.File;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import java.io.FileOutputStream;
+
+
 public class AttachLinkOrFileDialog {
     public final static int IMAGE_ACTION = 2, FILE_OR_LINK_ACTION = 3, AUDIO_ACTION = 4;
 
@@ -265,9 +270,44 @@ public class AttachLinkOrFileDialog {
     private static File copyFileToAttachmentDir(final File attachment, final File attachmentDir) {
         final File local = GsFileUtils.findNonConflictingDest(attachmentDir, attachment.getName());
         attachmentDir.mkdirs();
-        GsFileUtils.copyFile(attachment, local);
+
+        if (attachment.getName().matches("(?i).+\\.(jpg|jpeg|png|webp)")) {
+            compressAndCopyImage(attachment, local);
+        } else {
+            GsFileUtils.copyFile(attachment, local);
+        }
+
         return local;
     }
+
+    private static void compressAndCopyImage(File source, File dest) {
+        try {
+            Bitmap bitmap = BitmapFactory.decodeFile(source.getAbsolutePath());
+            if (bitmap == null) {
+                GsFileUtils.copyFile(source, dest);  // fallback
+                return;
+            }
+
+            // Scale down if larger than desired size
+            int maxDim = 1024;  // adjust max dimension as desired
+            int width = bitmap.getWidth();
+            int height = bitmap.getHeight();
+
+            if (width > maxDim || height > maxDim) {
+                float scale = Math.min((float) maxDim / width, (float) maxDim / height);
+                bitmap = Bitmap.createScaledBitmap(bitmap, Math.round(width * scale), Math.round(height * scale), true);
+            }
+
+            // Compress and save as JPEG at 80% quality
+            try (FileOutputStream out = new FileOutputStream(dest)) {
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 80, out);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            GsFileUtils.copyFile(source, dest);  // fallback
+        }
+    }
+
 
     private static String setupFileAttachment(
             final int textFormatId,

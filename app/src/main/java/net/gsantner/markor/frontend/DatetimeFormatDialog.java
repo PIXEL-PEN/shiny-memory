@@ -75,7 +75,24 @@ public class DatetimeFormatDialog {
             "dd hh:mm:ss",
             "'[W'w']' EEEE, dd.MM.yyyy",
             "'\\n[W'w']' EEEE, dd.MM.yyyy'\\n‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\\n'",
+            "EEE. dd MMMM yyyy • hh:mm a •",
+            "EEE. dd MMMM yyyy | hh:mm a ",
+            "EEE. dd MMMM yyyy",
+            "EEEE. dd MMMM yyyy",
+            "EEE. MMMM dd yyyy",
+            "EEE. MMMM dd YYYY | hh:mm a"
+
+
+
+
+
+
+
     };
+
+
+
+
 
     /**
      * @param activity {@link Activity} from which is {@link DatetimeFormatDialog} called

@@ -67,6 +67,8 @@ import java.util.Locale;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
+
 
 
 
@@ -235,13 +237,36 @@ public class GsFileBrowserListAdapter extends RecyclerView.Adapter<GsFileBrowser
             }
         }
 
-        // Set description
+        // Set description (modified date or absolute path)
         if (!_dopt.descModtimeInsteadOfParent || isGoUp) {
             holder.description.setText(file.getAbsolutePath());
         } else {
             holder.description.setText(formatFileDescription(file, _dopt.descriptionFormat));
         }
         holder.description.setTextColor(ContextCompat.getColor(_context, _dopt.secondaryTextColor));
+
+        // --- NEW: Set created date below description ---
+        try {
+            Path path = file.toPath();
+            BasicFileAttributes attrs = Files.readAttributes(path, BasicFileAttributes.class);
+            FileTime creationTime = attrs.creationTime();
+            String createdStr = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, Locale.getDefault())
+                    .format(new Date(creationTime.toMillis()));
+
+            TextView createdView = holder.itemView.findViewById(R.id.note_extra_created);
+            if (createdView != null) {
+                createdView.setText("Created: " + createdStr);
+                createdView.setTextColor(ContextCompat.getColor(_context, _dopt.secondaryTextColor));
+                createdView.setTypeface(null, android.graphics.Typeface.ITALIC);
+            }
+        } catch (Exception e) {
+            TextView createdView = holder.itemView.findViewById(R.id.note_extra_created);
+            if (createdView != null) {
+                createdView.setText(""); // clear text if creation date unavailable
+
+
+            }
+        }
 
         // Set icon
         if (isSelected) {
@@ -880,6 +905,8 @@ public class GsFileBrowserListAdapter extends RecyclerView.Adapter<GsFileBrowser
         final ImageView image;
         final TextView title;
         final TextView description;
+        final TextView dateCreated;
+
 
         //########################
         //## Methods
@@ -890,6 +917,8 @@ public class GsFileBrowserListAdapter extends RecyclerView.Adapter<GsFileBrowser
             image = row.findViewById(R.id.opoc_filesystem_item__image);
             title = row.findViewById(R.id.opoc_filesystem_item__title);
             description = row.findViewById(R.id.opoc_filesystem_item__description);
+            dateCreated = row.findViewById(R.id.note_extra_created);
+
         }
     }
 

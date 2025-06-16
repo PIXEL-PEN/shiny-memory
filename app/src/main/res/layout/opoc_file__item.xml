@@ -56,6 +56,19 @@
             android:textColor="@android:color/tertiary_text_dark"
             android:textSize="15sp"
             tools:ignore="UnusedAttribute" />
-    </LinearLayout>
+        <!-- NEW: Date Created TextView -->
+        <TextView
+            android:id="@+id/note_extra_created"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="middle"
+            android:fontFamily="sans-serif-light"
+            android:singleLine="true"
+            android:textColor="@android:color/tertiary_text_dark"
+            android:textSize="15sp"
+            android:textStyle="italic"
+            tools:ignore="UnusedAttribute" />
 
-</LinearLayout>
+    </LinearLayout>  <!-- closes inner vertical LinearLayout -->
+
+</LinearLayout> <!-- closes root horizontal LinearLayout -->
