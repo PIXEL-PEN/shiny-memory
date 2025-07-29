@@ -76,4 +76,7 @@
 
     <color name="link">#FF1EA3FD</color>;
     <color name="transparent">#00FFFFFF</color>
+    <color name="dark_green">#006400</color>
+
+
 </resources>

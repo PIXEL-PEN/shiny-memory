@@ -54,6 +54,8 @@ import java.util.concurrent.TimeUnit;
 
 import other.writeily.widget.WrMarkorWidgetProvider;
 
+import android.widget.Toast;
+
 public class MainActivity extends MarkorBaseActivity implements GsFileBrowserFragment.FilesystemFragmentOptionsListener {
 
     public static boolean IS_DEBUG_ENABLED = false;
@@ -83,11 +85,18 @@ public class MainActivity extends MarkorBaseActivity implements GsFileBrowserFra
 
         _cu = new MarkorContextUtils(this);
         setContentView(R.layout.main__activity);
+
         _bottomNav = findViewById(R.id.bottom_navigation_bar);
         _viewPager = findViewById(R.id.main__view_pager_container);
         _fab = findViewById(R.id.fab_add_new_item);
         _fab.setOnClickListener(this::onClickFab);
         _fab.setOnLongClickListener(this::onLongClickFab);
+
+        FloatingActionButton calendarFab = findViewById(R.id.fab_open_calendar);
+        calendarFab.setOnClickListener(v ->
+                Toast.makeText(this, "Open calendar tapped", Toast.LENGTH_SHORT).show()
+        );
+
         _viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {

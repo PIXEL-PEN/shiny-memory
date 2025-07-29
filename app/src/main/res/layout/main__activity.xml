@@ -32,9 +32,7 @@
             android:background="?attr/colorPrimary"
             android:theme="@style/LightTextToolbarOverlay"
             app:subtitleTextColor="@color/secondary_text"
-            app:title="@string/app_name">
-
-        </androidx.appcompat.widget.Toolbar>
+            app:title="@string/app_name" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -45,7 +43,7 @@
         android:layout_marginTop="?attr/actionBarSize"
         android:layout_marginBottom="?attr/actionBarSize" />
 
-    <!--suppress AndroidUnknownAttribute -->
+    <!-- Existing FAB for adding new item -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_add_new_item"
         android:layout_width="wrap_content"
@@ -56,6 +54,21 @@
         android:layout_marginBottom="72dp"
         android:contentDescription="@string/create_new_file_or_folder"
         android:src="@drawable/ic_add_white_24dp"
+        app:shapeAppearance="@style/ShapeAppearanceOverlay.Material3.FloatingActionButton" />
+
+    <!-- NEW FAB for opening calendar -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_open_calendar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginBottom="141dp"
+        android:contentDescription="@string/fab_open_calendar"
+        android:src="@drawable/ic_calendar_white_24dp"
+        app:backgroundTint="@color/dark_green"
+
         app:shapeAppearance="@style/ShapeAppearanceOverlay.Material3.FloatingActionButton" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
