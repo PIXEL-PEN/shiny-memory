@@ -1,15 +1,83 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/calendar_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white">
+    android:orientation="vertical"
+    android:background="@android:color/white"
+    android:padding="16dp"
+    tools:context=".activity.CalendarActivity">
 
-    <!-- Temporary placeholder -->
-    <TextView
-        android:layout_width="wrap_content"
+    <!-- Calendar Grid Placeholder -->
+    <FrameLayout
+        android:id="@+id/calendar_grid_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@android:color/darker_gray"
+        android:contentDescription="Calendar Grid Placeholder" />
+
+    <!-- Button Line -->
+    <LinearLayout
+        android:id="@+id/button_line"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Calendar Screen"
-        android:textSize="24sp"
-        android:layout_gravity="center" />
-</FrameLayout>
-    idget.ConstraintLayout>
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:weightSum="4">
+
+        <Button
+            android:id="@+id/btn_reset"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Reset" />
+
+        <Button
+            android:id="@+id/btn_submit"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Submit"
+            android:layout_marginStart="8dp" />
+
+        <Spinner
+            android:id="@+id/spinner_category"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp" />
+
+        <ImageButton
+            android:id="@+id/btn_browser"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="0"
+            android:src="@android:drawable/ic_menu_search"
+            android:contentDescription="Open file browser"
+            android:background="?android:selectableItemBackground"
+            android:layout_marginStart="8dp" />
+
+        android:layout_marginStart="8dp" />
+
+    </LinearLayout>
+
+    <!-- Input Field with fixed height and scroll -->
+    <EditText
+        android:id="@+id/input_note_title"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:hint="Note title"
+        android:inputType="textMultiLine"
+        android:maxLength="250"
+        android:maxLines="10"
+        android:gravity="top|start"
+        android:background="@android:drawable/edit_text"
+        android:padding="8dp"
+        android:scrollbars="vertical"
+        android:overScrollMode="always"
+        android:scrollHorizontally="false" />
+
+</LinearLayout>

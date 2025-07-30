@@ -74,7 +74,7 @@
     <color name="nord_bg_light">#ECEFF4</color>
     <color name="nord_fg_light">#2E3440</color>
 
-    <color name="link">#FF1EA3FD</color>;
+    <color name="link">#FF1EA3FD</color>
     <color name="transparent">#00FFFFFF</color>
     <color name="dark_green">#006400</color>
 

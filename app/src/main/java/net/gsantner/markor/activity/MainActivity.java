@@ -93,9 +93,11 @@ public class MainActivity extends MarkorBaseActivity implements GsFileBrowserFra
         _fab.setOnLongClickListener(this::onLongClickFab);
 
         FloatingActionButton calendarFab = findViewById(R.id.fab_open_calendar);
-        calendarFab.setOnClickListener(v ->
-                Toast.makeText(this, "Open calendar tapped", Toast.LENGTH_SHORT).show()
-        );
+        calendarFab.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, CalendarActivity.class);
+            startActivity(intent);
+        });
+
 
         _viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
