@@ -21,7 +21,7 @@
         <item name="windowNoTitle">true</item>
         <item name="windowActionBar">false</item>
         <item name="android:actionButtonStyle">@style/LessSpaceActionButtonStyle</item>
-        <item name="preferenceTheme">@style/AppTheme.PreferenceTheme</item>
+
         <item name="colorPrimaryDark">@color/primary_dark</item>
         <item name="android:actionModeBackground">@color/primary_dark</item>
         <item name="actionModeBackground">@color/primary_dark</item>
@@ -43,16 +43,12 @@
         <item name="android:dialogCornerRadius" tools:targetApi="p">@dimen/dialog_corner_radius</item>
 
         <!-- android-35 Disable window size overlap -->
-        <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>
+
     </style>
 
-    <style name="AppTheme.PreferenceTheme" parent="PreferenceThemeOverlay.v14.Material">
-        <item name="preferenceCategoryStyle">@style/AppTheme.PreferenceTheme.CategoryStyle</item>
-    </style>
 
-    <style name="AppTheme.PreferenceTheme.CategoryStyle" parent="Preference.Category">
-        <item name="android:layout">@layout/opoc_pref_category_text</item>
-    </style>
+
+
 
     <style name="LightTextToolbarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar">
         <item name="android:actionModeBackground">@color/primary_dark</item>

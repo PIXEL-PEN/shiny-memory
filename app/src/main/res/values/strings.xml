@@ -487,6 +487,10 @@ work. If not, see <https://creativecommons.org/publicdomain/zero/1.0/>.
     <string name="use_tab_to_indent">Indent lines with TAB key</string>
     <string name="folder_local">Folder local</string>
     <string name="fab_open_calendar">Open Calendar</string>
+    <string name="copy">Copy</string>
+
+
+
 
 
 </resources>

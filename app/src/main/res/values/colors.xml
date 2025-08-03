@@ -48,7 +48,6 @@
     <color name="dark__file">#9E9E9E</color>
     <color name="dark__folder">#9E9E9E</color>
 
-
     <color name="white">#FFFFFFFF</color>
     <color name="black">#000000</color>
     <color name="grey">#FF505050</color>
@@ -78,5 +77,7 @@
     <color name="transparent">#00FFFFFF</color>
     <color name="dark_green">#006400</color>
 
-
+    <!-- Added for Theme.Material3 compatibility -->
+    <color name="on_primary">#FFFFFF</color>
+    <color name="on_secondary">#000000</color>
 </resources>
