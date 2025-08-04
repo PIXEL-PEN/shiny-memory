@@ -9,14 +9,23 @@
     android:padding="16dp"
     tools:context=".activity.CalendarActivity">
 
-    <!-- Calendar Grid Placeholder -->
+    <!-- Calendar Grid with native CalendarView -->
     <FrameLayout
         android:id="@+id/calendar_grid_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:background="@android:color/darker_gray"
-        android:contentDescription="Calendar Grid Placeholder" />
+        android:contentDescription="Calendar Grid Container">
+
+        <CalendarView
+            android:id="@+id/calendarView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:background="@android:color/white" />
+
+    </FrameLayout>
 
     <!-- Button Line -->
     <LinearLayout
@@ -59,9 +68,6 @@
             android:contentDescription="Open file browser"
             android:background="?android:selectableItemBackground"
             android:layout_marginStart="8dp" />
-
-        android:layout_marginStart="8dp" />
-
     </LinearLayout>
 
     <!-- Input Field with fixed height and scroll -->
