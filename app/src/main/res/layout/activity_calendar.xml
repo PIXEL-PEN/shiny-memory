@@ -92,7 +92,7 @@
     <EditText
         android:id="@+id/input_note_title"
         android:layout_width="match_parent"
-        android:layout_height="150dp"
+        android:layout_height="100dp"
         android:layout_marginTop="12dp"
         android:hint="Enter note title.."
         android:textColorHint="@android:color/darker_gray"
