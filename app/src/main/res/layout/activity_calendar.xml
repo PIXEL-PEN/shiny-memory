@@ -27,54 +27,65 @@
 
     </FrameLayout>
 
-    <!-- Button Line -->
+    <!-- Browser icon row -->
     <LinearLayout
-        android:id="@+id/button_line"
+        android:id="@+id/browser_row"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:gravity="end"
         android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:weightSum="4">
-
-        <Button
-            android:id="@+id/btn_reset"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Reset"
-            android:textAllCaps="false"
-            android:textSize="14sp"
-            android:minHeight="36dp"
-            android:layout_marginEnd="4dp" />
-
-        <Button
-            android:id="@+id/btn_submit"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Submit"
-            android:textAllCaps="false"
-            android:textSize="14sp"
-            android:minHeight="36dp"
-            android:layout_marginStart="4dp" />
-
-        <Spinner
-            android:id="@+id/spinner_category"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="8dp" />
+        android:layout_marginBottom="4dp">
 
         <ImageButton
             android:id="@+id/btn_browser"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="0"
             android:src="@android:drawable/ic_menu_search"
             android:contentDescription="Open file browser"
             android:background="?android:selectableItemBackground"
-            android:layout_marginStart="8dp" />
+            android:layout_marginEnd="4dp"
+            android:layout_gravity="center_vertical" />
+    </LinearLayout>
+
+    <!-- Button + Spinner row -->
+    <LinearLayout
+        android:id="@+id/button_line"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:weightSum="100">
+
+        <Button
+            android:id="@+id/btn_reset"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="22"
+            android:text="Reset"
+            android:textAllCaps="false"
+            android:textSize="14sp"
+            android:minHeight="36dp"
+            android:layout_marginEnd="2dp" />
+
+        <Button
+            android:id="@+id/btn_submit"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="22"
+            android:text="Submit"
+            android:textAllCaps="false"
+            android:textSize="14sp"
+            android:minHeight="36dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp" />
+
+        <Spinner
+            android:id="@+id/spinner_category"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="56"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp" />
     </LinearLayout>
 
     <!-- Input Field with fixed height and scroll -->
@@ -82,6 +93,7 @@
         android:id="@+id/input_note_title"
         android:layout_width="match_parent"
         android:layout_height="150dp"
+        android:layout_marginTop="12dp"
         android:hint="Enter note title.."
         android:textColorHint="@android:color/darker_gray"
         android:inputType="textMultiLine"

@@ -488,5 +488,21 @@ work. If not, see <https://creativecommons.org/publicdomain/zero/1.0/>.
     <string name="folder_local">Folder local</string>
     <string name="fab_open_calendar">Open Calendar</string>
 
+    <string-array name="category_list">
+        <item>General</item>
+        <item>Projects</item>
+        <item>Purchases</item>
+        <item>Reference</item>
+        <item>Daily Trivia</item>
+        <item>Insights-Ideas</item>
+        <item>Key Events</item>
+        <item>Social</item>
+        <item>Medical-Health</item>
+        <item>Finance</item>
+        <item>Affirmations</item>
+        <item>Emails</item>
+    </string-array>
+
+
 
 </resources>

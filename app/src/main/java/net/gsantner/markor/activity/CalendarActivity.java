@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CalendarView;
 import android.widget.EditText;
@@ -46,8 +47,22 @@ public class CalendarActivity extends Activity {
         btnBrowser = findViewById(R.id.btn_browser);
         calendarView = findViewById(R.id.calendarView);
 
-        // 2. Set today's date as default
-        String today = new SimpleDateFormat("EEE. dd MMMM, yyyy", Locale.getDefault()).format(new Date());
+        // 2. Set up spinner with predefined categories
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
+                this,
+                R.array.category_list,
+                R.layout.spinner_item  // Custom layout for selected item
+        );
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerCategory.setAdapter(adapter);
+        spinnerCategory.setSelection(0);  // Default to "General"
+
+        spinnerCategory.setAdapter(adapter);
+        spinnerCategory.setSelection(0);  // Default to "General"
+
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerCategory.setAdapter(adapter);
+        spinnerCategory.setSelection(0); // Default to "General"
 
         // 3. Reset button: clear input, reset spinner and calendar
         btnReset.setOnClickListener(v -> {
@@ -61,7 +76,9 @@ public class CalendarActivity extends Activity {
         btnSubmit.setOnClickListener(v -> createNoteFileAndSeedContent());
 
         // 5. File browser button: stub for now
-        btnBrowser.setOnClickListener(v -> Toast.makeText(CalendarActivity.this, "File browser not yet implemented", Toast.LENGTH_SHORT).show());
+        btnBrowser.setOnClickListener(v ->
+                Toast.makeText(CalendarActivity.this, "File browser not yet implemented", Toast.LENGTH_SHORT).show()
+        );
     }
 
     // Method to create folder structure and new note file, and seed date stamp
@@ -74,14 +91,17 @@ public class CalendarActivity extends Activity {
 
         String category = spinnerCategory.getSelectedItem().toString();
 
-        Calendar calendar = Calendar.getInstance();
+        // Use selected date from calendarView
+        Calendar selectedDate = Calendar.getInstance();
+        selectedDate.setTimeInMillis(calendarView.getDate());
+
         SimpleDateFormat yearFormat = new SimpleDateFormat("yyyy", Locale.getDefault());
         SimpleDateFormat monthFormat = new SimpleDateFormat("MM_MMMM", Locale.getDefault());
         SimpleDateFormat timestampFormat = new SimpleDateFormat("EEE. MMM dd, yyyy h:mm a", Locale.getDefault());
 
-        String year = yearFormat.format(calendar.getTime());
-        String month = monthFormat.format(calendar.getTime());
-        String timestamp = timestampFormat.format(calendar.getTime());
+        String year = yearFormat.format(selectedDate.getTime());
+        String month = monthFormat.format(selectedDate.getTime());
+        String timestamp = timestampFormat.format(selectedDate.getTime());
 
         File root = new File(Environment.getExternalStorageDirectory(), "Documents/Tree");
         File yearDir = new File(root, year);
