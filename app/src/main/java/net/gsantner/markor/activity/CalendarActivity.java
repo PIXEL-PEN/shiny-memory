@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CalendarView;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Spinner;
@@ -30,6 +31,7 @@ public class CalendarActivity extends Activity {
     private Button btnReset, btnSubmit;
     private Spinner spinnerCategory;
     private ImageButton btnBrowser;
+    private CalendarView calendarView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,15 +44,16 @@ public class CalendarActivity extends Activity {
         btnSubmit = findViewById(R.id.btn_submit);
         spinnerCategory = findViewById(R.id.spinner_category);
         btnBrowser = findViewById(R.id.btn_browser);
+        calendarView = findViewById(R.id.calendarView);
 
-        // 2. Set today's date as default input
+        // 2. Set today's date as default
         String today = new SimpleDateFormat("EEE. dd MMMM, yyyy", Locale.getDefault()).format(new Date());
-        inputNoteTitle.setText(today + "\n\n");
 
-        // 3. Reset button: clears input and resets spinner
+        // 3. Reset button: clear input, reset spinner and calendar
         btnReset.setOnClickListener(v -> {
-            inputNoteTitle.setText(today + "\n\n");
-            spinnerCategory.setSelection(0);
+            inputNoteTitle.setText("");  // Clear input field
+            spinnerCategory.setSelection(0);  // Reset spinner
+            calendarView.setDate(System.currentTimeMillis(), false, true);  // Reset calendar view
             Toast.makeText(CalendarActivity.this, "Reset", Toast.LENGTH_SHORT).show();
         });
 
@@ -74,7 +77,7 @@ public class CalendarActivity extends Activity {
         Calendar calendar = Calendar.getInstance();
         SimpleDateFormat yearFormat = new SimpleDateFormat("yyyy", Locale.getDefault());
         SimpleDateFormat monthFormat = new SimpleDateFormat("MM_MMMM", Locale.getDefault());
-        SimpleDateFormat timestampFormat = new SimpleDateFormat("EEE. MMMM dd yyyy | h:mm a", Locale.getDefault());
+        SimpleDateFormat timestampFormat = new SimpleDateFormat("EEE. MMM dd, yyyy h:mm a", Locale.getDefault());
 
         String year = yearFormat.format(calendar.getTime());
         String month = monthFormat.format(calendar.getTime());
