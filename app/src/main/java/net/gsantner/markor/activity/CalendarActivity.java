@@ -51,15 +51,8 @@ public class CalendarActivity extends Activity {
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
                 this,
                 R.array.category_list,
-                R.layout.spinner_item  // Custom layout for selected item
+                R.layout.spinner_item
         );
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerCategory.setAdapter(adapter);
-        spinnerCategory.setSelection(0);  // Default to "General"
-
-        spinnerCategory.setAdapter(adapter);
-        spinnerCategory.setSelection(0);  // Default to "General"
-
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerCategory.setAdapter(adapter);
         spinnerCategory.setSelection(0); // Default to "General"
@@ -97,13 +90,15 @@ public class CalendarActivity extends Activity {
 
         SimpleDateFormat yearFormat = new SimpleDateFormat("yyyy", Locale.getDefault());
         SimpleDateFormat monthFormat = new SimpleDateFormat("MM_MMMM", Locale.getDefault());
-        SimpleDateFormat timestampFormat = new SimpleDateFormat("EEE. MMM dd, yyyy h:mm a", Locale.getDefault());
+        SimpleDateFormat timestampFormat = new SimpleDateFormat("EEE. MMMM dd yyyy | h:mm a", Locale.getDefault());
 
         String year = yearFormat.format(selectedDate.getTime());
         String month = monthFormat.format(selectedDate.getTime());
         String timestamp = timestampFormat.format(selectedDate.getTime());
 
-        File root = new File(Environment.getExternalStorageDirectory(), "Documents/Tree");
+        // ✅ Use app-private external storage under Documents
+        File root = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "markor default");
+
         File yearDir = new File(root, year);
         File monthDir = new File(yearDir, month);
         File categoryDir = new File(monthDir, category);
