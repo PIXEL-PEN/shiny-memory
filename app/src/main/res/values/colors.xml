@@ -83,5 +83,8 @@
     <color name="transparent">#00FFFFFF</color>
     <color name="teal_700">#018786</color>
 
+    <color name="fab_grey_pale">#EEEEEE</color>  <!-- Soft light grey background -->
+
+
 
 </resources>

@@ -92,19 +92,18 @@
         android:background="@color/black"
         android:visibility="gone" />
 
-    <!-- FAB to insert date stamp at top of note -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_insert_date"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:layout_gravity="top|end"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        android:backgroundTint="@color/teal_700"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="12dp"
         android:contentDescription="Insert Date"
-        android:src="@null"
-        android:visibility="gone" />
-
+        android:visibility="gone"
+        android:backgroundTint="@color/fab_grey_pale"
+        android:elevation="2dp"
+        android:src="@null" />
 
 
 </FrameLayout>
