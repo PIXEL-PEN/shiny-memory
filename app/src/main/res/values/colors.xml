@@ -48,7 +48,6 @@
     <color name="dark__file">#9E9E9E</color>
     <color name="dark__folder">#9E9E9E</color>
 
-
     <color name="white">#FFFFFFFF</color>
     <color name="black">#000000</color>
     <color name="grey">#FF505050</color>
@@ -56,13 +55,16 @@
     <color name="light_grey">#FFC0C0C0</color>
     <color name="lighter_grey">#FFE0E0E0</color>
 
+    <!-- Additional color themes -->
     <color name="solarized_bg_dark">#002B36</color>
     <color name="solarized_bg_light">#FCF5E4</color>
     <color name="solarized_fg">#657B83</color>
+
     <color name="gruvbox_bg_dark">#282828</color>
     <color name="gruvbox_fg_dark">#EBDBB2</color>
     <color name="gruvbox_bg_light">#FBF1C7</color>
     <color name="gruvbox_fg_light">#3C3836</color>
+
     <color name="green_dark">#00FF00</color>
     <color name="green_light">#00BB00</color>
 
@@ -74,6 +76,12 @@
     <color name="nord_bg_light">#ECEFF4</color>
     <color name="nord_fg_light">#2E3440</color>
 
-    <color name="link">#FF1EA3FD</color>;
+    <!-- Launcher icon background for DEV flavor -->
+    <color name="ic_launcher_background">#3F51B5</color> <!-- Indigo-ish -->
+
+    <color name="link">#FF1EA3FD</color>
     <color name="transparent">#00FFFFFF</color>
+    <color name="teal_700">#018786</color>
+
+
 </resources>

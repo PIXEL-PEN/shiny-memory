@@ -43,20 +43,34 @@ android {
     flavorDimensions "default"
     productFlavors {
         flavorAtest {
+            dimension "default"
             applicationId "net.gsantner.markor_test"
             versionCode = Integer.parseInt(new Date().format('yyMMdd'))
             versionName = defaultConfig.versionName + "-" + new Date().format('HHmm')
             buildConfigField "boolean", "IS_TEST_BUILD", "true"
+            resValue "string", "app_name", "Markor ATEST"
         }
+
         flavorDefault {
-            applicationId "net.gsantner.markor_default"   // distinct ID so it installs alongside others
+            dimension "default"
+            applicationId "net.gsantner.markor_default"
             versionCode = Integer.parseInt(new Date().format('yyMMdd'))
             versionName = defaultConfig.versionName + "-" + new Date().format('HHmm')
             buildConfigField "boolean", "IS_TEST_BUILD", "true"
-            resValue "string", "app_name", "Markor DEFAULT"   // 👈 NEW: change app name on launcher
+            resValue "string", "app_name", "Markor DEFAULT"
+        }
+
+        flavorDev {
+            dimension "default"
+            applicationId "net.gsantner.markor_dev"
+            versionCode = Integer.parseInt(new Date().format('yyMMdd'))
+            versionName = defaultConfig.versionName + "-DEV-" + new Date().format('HHmm')
+            buildConfigField "boolean", "IS_DEV_BUILD", "true"
+            resValue "string", "app_name", "Markor DEV"
         }
 
         flavorGplay {
+            dimension "default"
             buildConfigField "boolean", "IS_GPLAY_BUILD", "true"
         }
     }

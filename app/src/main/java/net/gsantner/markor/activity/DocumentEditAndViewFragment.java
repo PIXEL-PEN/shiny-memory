@@ -69,6 +69,12 @@ import net.gsantner.opoc.wrapper.GsTextWatcherAdapter;
 
 import java.io.File;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
+
 @SuppressWarnings({"UnusedReturnValue"})
 @SuppressLint("NonConstantResourceId")
 public class DocumentEditAndViewFragment extends MarkorBaseFragment implements FormatRegistry.TextFormatApplier {
@@ -153,6 +159,27 @@ public class DocumentEditAndViewFragment extends MarkorBaseFragment implements F
             }
             return;
         }
+
+        FloatingActionButton fabInsertDate = view.findViewById(R.id.fab_insert_date);
+
+
+// Show the FAB only when the editor is visible
+        if (!_isPreviewVisible) {
+            fabInsertDate.setVisibility(View.VISIBLE);
+
+            fabInsertDate.setOnClickListener(v -> {
+                String date = new SimpleDateFormat("EEE. MMMM d, yyyy | h:mm a", Locale.getDefault()).format(new Date());
+
+                if (_hlEditor != null) {
+                    _hlEditor.requestFocus();
+                    _hlEditor.getText().insert(0, date + "\n");
+                }
+            });
+        } else {
+            fabInsertDate.setVisibility(View.GONE);
+        }
+
+
 
         _lineNumbersView.setup(_hlEditor);
         _lineNumbersView.setLineNumbersEnabled(_appSettings.getDocumentLineNumbersEnabled(_document.path));
@@ -283,6 +310,9 @@ public class DocumentEditAndViewFragment extends MarkorBaseFragment implements F
         _hlEditor.post(() -> _hlEditor.animate().alpha(1).setDuration(500).start());
     }
 
+
+
+
     @Override
     public void onResume() {
         _webView.onResume();
@@ -312,6 +342,12 @@ public class DocumentEditAndViewFragment extends MarkorBaseFragment implements F
         outState.putSerializable(SAVESTATE_DOCUMENT, _document);
         super.onSaveInstanceState(outState);
     }
+
+
+
+
+
+
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
