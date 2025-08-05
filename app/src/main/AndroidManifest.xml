@@ -107,6 +107,9 @@
             android:label="@string/app_name"
             android:parentActivityName=".activity.MainActivity" />
 
+        <activity android:name=".activity.FolderBrowserActivity" />
+
+
         <receiver
             android:name="other.writeily.widget.WrMarkorWidgetProvider"
             android:exported="true">

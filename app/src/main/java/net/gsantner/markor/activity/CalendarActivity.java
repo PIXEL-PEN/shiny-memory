@@ -25,6 +25,10 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import net.gsantner.markor.activity.FolderBrowserActivity;
+import android.util.Log;
+
+
 
 public class CalendarActivity extends Activity {
 
@@ -76,11 +80,11 @@ public class CalendarActivity extends Activity {
 
         // 5. Submit logic
         btnSubmit.setOnClickListener(v -> createNoteFileAndSeedContent());
-
-        // 6. File browser stub
-        btnBrowser.setOnClickListener(v ->
-                Toast.makeText(CalendarActivity.this, "File browser not yet implemented", Toast.LENGTH_SHORT).show()
-        );
+        btnBrowser.setOnClickListener(v -> {
+            Log.d("FolderTree", "📁 Button clicked");
+            Intent intent = new Intent(CalendarActivity.this, FolderBrowserActivity.class);
+            startActivity(intent);
+        });
     }
 
     private void createNoteFileAndSeedContent() {
