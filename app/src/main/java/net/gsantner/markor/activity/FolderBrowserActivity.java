@@ -24,7 +24,6 @@ public class FolderBrowserActivity extends Activity {
         setContentView(R.layout.activity_folder_browser);
 
         webView = findViewById(R.id.folder_browser_webview);
-
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
         webView.setWebViewClient(new WebViewClient());
@@ -53,9 +52,10 @@ public class FolderBrowserActivity extends Activity {
                 .append("a:hover { text-decoration: underline; color: #000; }")
                 .append("</style>")
                 .append("<script>")
-                .append("function toggle(id) {")
+                .append("function toggle(id, arrowId) {")
                 .append("  var e = document.getElementById(id);")
-                .append("  if (e.style.display === 'none') { e.style.display = 'block'; } else { e.style.display = 'none'; }")
+                .append("  var a = document.getElementById(arrowId);")
+                .append("  if (e.style.display === 'none') { e.style.display = 'block'; a.innerHTML = '▾'; } else { e.style.display = 'none'; a.innerHTML = '▸'; }")
                 .append("}")
                 .append("</script>")
                 .append("</head><body>");
@@ -68,14 +68,19 @@ public class FolderBrowserActivity extends Activity {
 
     private void appendFolderHtml(StringBuilder sb, FolderNode folder, int depth, String selectedCategory, String selectedMonth) {
         String id = "f" + folder.hashCode();
+        String arrowId = "a" + folder.hashCode();
+        boolean isSelectedPath = folder.name.equals(selectedCategory) || folder.name.equals(selectedMonth);
+        String expandByDefault = isSelectedPath ? "block" : "none";
+        String arrowSymbol = isSelectedPath ? "▾" : "▸";
         String folderIndent = "margin-left: " + (depth * 20) + "px;";
-        String expandByDefault = folder.expanded ? "block" : "none";
 
-        // Remove number prefixes like "01_January"
         String displayName = folder.name.replaceFirst("^\\d{2}_", "");
 
-        sb.append("<div class='folder' style='").append(folderIndent).append("' onclick=\"toggle('").append(id).append("')\">")
-                .append(displayName).append("</div>");
+        sb.append("<div class='folder' style='").append(folderIndent)
+                .append("' onclick=\"toggle('").append(id).append("','").append(arrowId).append("')\">")
+                .append("<span id='").append(arrowId).append("'>").append(arrowSymbol).append("</span> ")
+                .append(displayName)
+                .append("</div>");
 
         sb.append("<div id='").append(id).append("' style='display:").append(expandByDefault).append(";'>");
 
@@ -83,9 +88,7 @@ public class FolderBrowserActivity extends Activity {
             appendFolderHtml(sb, sub, depth + 1, selectedCategory, selectedMonth);
         }
 
-        // ✅ Add additional indent (+20px) for files so they appear nested deeper than folders
         String fileIndent = "margin-left: " + ((depth * 20) + 20) + "px;";
-
         for (FileNode file : folder.files) {
             sb.append("<div class='file' style='").append(fileIndent).append("'>")
                     .append("<div class='icon'>📄</div>")
