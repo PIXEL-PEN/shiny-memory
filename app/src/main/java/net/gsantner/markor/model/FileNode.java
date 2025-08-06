@@ -12,7 +12,9 @@ public class FileNode {
     public FileNode(String name, File file, int depth) {
         this.name = name;
         this.file = file;
-        this.lastModified = new Date(file.lastModified());
         this.depth = depth;
+        this.lastModified = new Date(file.lastModified());
     }
+
 }
+

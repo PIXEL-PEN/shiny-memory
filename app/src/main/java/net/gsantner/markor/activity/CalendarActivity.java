@@ -79,12 +79,13 @@ public class CalendarActivity extends Activity {
         });
 
         // 5. Submit logic
-        btnSubmit.setOnClickListener(v -> createNoteFileAndSeedContent());
         btnBrowser.setOnClickListener(v -> {
-            Log.d("FolderTree", "📁 Button clicked");
+            String selectedCategory = spinnerCategory.getSelectedItem().toString();
             Intent intent = new Intent(CalendarActivity.this, FolderBrowserActivity.class);
+            intent.putExtra("selectedCategory", selectedCategory);
             startActivity(intent);
         });
+
     }
 
     private void createNoteFileAndSeedContent() {

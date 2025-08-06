@@ -2,21 +2,18 @@ package net.gsantner.markor.activity;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import net.gsantner.markor.R;
+import net.gsantner.markor.adapter.FolderTreeAdapter;
 import net.gsantner.markor.model.FolderNode;
 import net.gsantner.markor.model.FolderTreeScanner;
 
 import java.io.File;
-import net.gsantner.markor.adapter.FolderTreeAdapter;
-import android.os.Environment;
-
-
-
 
 public class FolderBrowserActivity extends Activity {
 
@@ -29,8 +26,12 @@ public class FolderBrowserActivity extends Activity {
 
         Log.d("FolderTree", "📣 FolderBrowserActivity launched");
 
-        File rootFolder = new File(Environment.getExternalStorageDirectory(), "Documents/markor default");
+        // ✅ Get category from intent
+        String selectedCategory = getIntent().getStringExtra("selectedCategory");
+        Log.d("FolderTree", "📌 Selected category: " + selectedCategory);
 
+        // ✅ Build root folder path (hardcoded for now)
+        File rootFolder = new File(Environment.getExternalStorageDirectory(), "Documents/markor default/2025/08_August");
 
         if (rootFolder == null || !rootFolder.exists()) {
             Log.w("FolderTree", "⚠️ Root folder not found: " + rootFolder);
@@ -39,12 +40,21 @@ public class FolderBrowserActivity extends Activity {
         }
 
         Log.d("FolderTree", "📣 Folder scan started: " + rootFolder.getAbsolutePath());
-        FolderNode tree = FolderTreeScanner.scan(rootFolder);
 
-        // ✅ Bind RecyclerView
+        // ✅ Pass selectedCategory to scanner
+        FolderNode tree = FolderTreeScanner.scan(rootFolder, selectedCategory);
+
+        if (tree == null) {
+            Log.w("FolderTree", "⚠️ Tree is null. Aborting.");
+            finish();
+            return;
+        }
+
+        tree.expanded = true;  // Expand root
+
         recyclerView = findViewById(R.id.folder_browser_recycler);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(new FolderTreeAdapter(tree));  // ✅ ACTIVE adapter line
+        recyclerView.setAdapter(new FolderTreeAdapter(tree));
 
         Log.d("FolderTree", "✅ Tree scan complete. UI ready.");
     }

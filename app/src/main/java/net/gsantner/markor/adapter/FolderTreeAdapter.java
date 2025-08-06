@@ -1,6 +1,7 @@
 package net.gsantner.markor.adapter;
 
 import android.graphics.Typeface;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,12 +22,13 @@ public class FolderTreeAdapter extends RecyclerView.Adapter<FolderTreeAdapter.No
 
     public FolderTreeAdapter(FolderNode rootNode) {
         this.rootNode = rootNode;
-        expandNode(rootNode, 0); // add root but keep children collapsed
+        rebuildVisibleItems(); // Initial build
     }
 
     @Override
     public NodeViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.folder_tree_item, parent, false);
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.folder_tree_item, parent, false);
         return new NodeViewHolder(view);
     }
 
@@ -43,28 +45,19 @@ public class FolderTreeAdapter extends RecyclerView.Adapter<FolderTreeAdapter.No
             int padding = 20 * depth;
             holder.itemView.setPadding(padding, holder.itemView.getPaddingTop(), 20, holder.itemView.getPaddingBottom());
 
-            // Styling by depth
+            // Styling by folder depth
             if (depth == 2) {
-                holder.name.setTextSize(19);  // Month
+                holder.name.setTextSize(19); // Month
                 holder.name.setTypeface(Typeface.DEFAULT, Typeface.NORMAL);
             } else if (depth == 3) {
-                holder.name.setTextSize(17);  // Category
+                holder.name.setTextSize(17); // Category
                 holder.name.setTypeface(Typeface.DEFAULT_BOLD);
             } else {
                 holder.name.setTextSize(16);
                 holder.name.setTypeface(Typeface.DEFAULT);
             }
 
-            holder.itemView.setOnClickListener(v -> {
-                int pos = holder.getAdapterPosition();
-                if (folder.expanded) {
-                    collapseNode(folder, pos);
-                } else {
-                    expandNode(folder, pos + 1);
-                }
-                folder.expanded = !folder.expanded;
-                notifyDataSetChanged();
-            });
+            holder.itemView.setOnClickListener(v -> toggleExpanded(folder));
 
         } else if (item instanceof FileNode) {
             FileNode file = (FileNode) item;
@@ -80,6 +73,7 @@ public class FolderTreeAdapter extends RecyclerView.Adapter<FolderTreeAdapter.No
 
     @Override
     public int getItemCount() {
+        Log.d("FolderTree", "🧮 Total visible nodes: " + visibleItems.size());
         return visibleItems.size();
     }
 
@@ -94,29 +88,25 @@ public class FolderTreeAdapter extends RecyclerView.Adapter<FolderTreeAdapter.No
         }
     }
 
-    private void expandNode(FolderNode node, int insertAt) {
-        visibleItems.add(insertAt, node);
-        if (node.expanded) {
-            for (FolderNode child : node.subfolders) {
-                expandNode(child, ++insertAt);
-            }
-            for (FileNode file : node.files) {
-                visibleItems.add(++insertAt, file);
-            }
-        }
+    // ✅ Toggle logic and rebuilding
+    private void toggleExpanded(FolderNode node) {
+        node.expanded = !node.expanded;
+        rebuildVisibleItems();
+        notifyDataSetChanged();
     }
 
-    private void collapseNode(FolderNode node, int startAt) {
-        int removeCount = 0;
-        for (FolderNode child : node.subfolders) {
-            if (child.expanded) {
-                collapseNode(child, 0);
+    private void rebuildVisibleItems() {
+        visibleItems.clear();
+        buildVisibleItemsRecursive(rootNode);
+    }
+
+    private void buildVisibleItemsRecursive(FolderNode node) {
+        visibleItems.add(node);
+        if (node.expanded) {
+            for (FolderNode sub : node.subfolders) {
+                buildVisibleItemsRecursive(sub);
             }
-            removeCount++;
-        }
-        removeCount += node.files.size();
-        for (int i = 0; i < removeCount; i++) {
-            visibleItems.remove(startAt + 1); // after node
+            visibleItems.addAll(node.files);
         }
     }
 }
