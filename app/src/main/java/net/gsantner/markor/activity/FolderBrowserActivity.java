@@ -30,8 +30,8 @@ public class FolderBrowserActivity extends Activity {
         String selectedCategory = getIntent().getStringExtra("selectedCategory");
         Log.d("FolderTree", "📌 Selected category: " + selectedCategory);
 
-        // ✅ Build root folder path (hardcoded for now)
-        File rootFolder = new File(Environment.getExternalStorageDirectory(), "Documents/markor default/2025/08_August");
+        // ✅ Build root folder path (confirmed working location)
+        File rootFolder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "markor default");
 
         if (rootFolder == null || !rootFolder.exists()) {
             Log.w("FolderTree", "⚠️ Root folder not found: " + rootFolder);
@@ -41,7 +41,7 @@ public class FolderBrowserActivity extends Activity {
 
         Log.d("FolderTree", "📣 Folder scan started: " + rootFolder.getAbsolutePath());
 
-        // ✅ Pass selectedCategory to scanner
+        // ✅ Scan with category awareness
         FolderNode tree = FolderTreeScanner.scan(rootFolder, selectedCategory);
 
         if (tree == null) {
@@ -50,8 +50,9 @@ public class FolderBrowserActivity extends Activity {
             return;
         }
 
-        tree.expanded = true;  // Expand root
+        tree.expanded = true;  // Show year folders initially
 
+        // ✅ Bind RecyclerView
         recyclerView = findViewById(R.id.folder_browser_recycler);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(new FolderTreeAdapter(tree));

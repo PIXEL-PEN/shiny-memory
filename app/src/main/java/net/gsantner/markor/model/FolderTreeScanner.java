@@ -17,12 +17,6 @@ public class FolderTreeScanner {
         FolderNode folder = new FolderNode(dir.getName(), dir);
         folder.depth = depth;
 
-        // Auto-expand category folder if name matches
-        if (categoryToExpand != null && categoryToExpand.equalsIgnoreCase(dir.getName())) {
-            folder.expanded = true;
-            Log.d("FolderTree", "📂 Auto-expanded category: " + dir.getName());
-        }
-
         File[] files = dir.listFiles();
         if (files == null) return folder;
 
@@ -34,10 +28,23 @@ public class FolderTreeScanner {
             if (name.startsWith(".") || name.equals(".res") || name.equals("_res")) continue;
 
             if (file.isDirectory()) {
-                folder.subfolders.add(scanRecursive(file, depth + 1, categoryToExpand));
+                FolderNode child = scanRecursive(file, depth + 1, categoryToExpand);
+                folder.subfolders.add(child);
+
+                // ✅ Auto-expand parent folders leading to the matched category
+                if (child.expanded) {
+                    folder.expanded = true;
+                }
+
             } else if (file.isFile()) {
                 folder.files.add(new FileNode(file.getName(), file, depth + 1));
             }
+        }
+
+        // ✅ Expand only the category folder itself (not others with same name)
+        if (categoryToExpand != null && categoryToExpand.equalsIgnoreCase(folder.name) && depth == 3) {
+            folder.expanded = true;
+            Log.d("FolderTree", "📂 Auto-expanded category: " + folder.name);
         }
 
         return folder;
