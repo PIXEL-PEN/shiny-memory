@@ -1,57 +1,47 @@
 package net.gsantner.markor.model;
 
-import android.util.Log;
-
 import java.io.File;
-import java.util.Arrays;
-import java.util.Comparator;
+import java.util.ArrayList;
+import java.util.List;
 
 public class FolderTreeScanner {
 
-    public static FolderNode scan(File root, String targetMonth, String targetCategory) {
-        if (!root.exists() || !root.isDirectory()) return null;
-        return scanRecursive(root, 0, targetMonth, targetCategory);
+    public static FolderNode scan(File rootFolder, String selectedCategory, String selectedMonth) {
+        if (rootFolder == null || !rootFolder.exists()) {
+            return new FolderNode("Empty", rootFolder);  // fallback
+        }
+        FolderNode root = buildTree(rootFolder, 0, selectedCategory, selectedMonth);
+        root.expanded = true;  // ✅ Always expand top-level folder
+        return root;
     }
 
-    private static FolderNode scanRecursive(File dir, int depth, String targetMonth, String targetCategory) {
-        FolderNode folder = new FolderNode(dir.getName(), dir);
-        folder.depth = depth;
+    private static FolderNode buildTree(File dir, int depth, String selectedCategory, String selectedMonth) {
+        FolderNode node = new FolderNode(dir.getName(), dir);
+        node.depth = depth;
 
         File[] files = dir.listFiles();
-        if (files == null) return folder;
-
-        // Sort for consistent output
-        Arrays.sort(files, Comparator.comparing(File::getName, String::compareToIgnoreCase));
+        if (files == null) return node;
 
         for (File file : files) {
-            String name = file.getName();
-            if (name.startsWith(".") || name.equals(".res") || name.equals("_res")) continue;
-
             if (file.isDirectory()) {
-                FolderNode child = scanRecursive(file, depth + 1, targetMonth, targetCategory);
-                folder.subfolders.add(child);
+                // Skip .res and _res folders
+                String folderName = file.getName().toLowerCase();
+                if (folderName.equals(".res") || folderName.equals("_res")) continue;
 
-                // ✅ Expand path leading to exact match
-                if (child.expanded) {
-                    folder.expanded = true;
+                FolderNode subfolder = buildTree(file, depth + 1, selectedCategory, selectedMonth);
+
+                // Expand the folder if it matches selected category or month
+                if (file.getName().equalsIgnoreCase(selectedCategory) ||
+                        file.getName().equalsIgnoreCase(selectedMonth)) {
+                    subfolder.expanded = true;
+                    node.expanded = true;  // ensure parent is open
                 }
-            } else if (file.isFile()) {
-                folder.files.add(new FileNode(file.getName(), file, depth + 1));
+
+                node.subfolders.add(subfolder);
+            } else {
+                node.files.add(new FileNode(file.getName(), file, depth + 1));
             }
         }
-
-        // ✅ Expand only when both month and category match
-        if (depth == 2 && folder.name.equalsIgnoreCase(targetMonth)) {
-            Log.d("FolderTree", "📂 Found matching month: " + folder.name);
-        }
-
-        if (depth == 3 &&
-                folder.name.equalsIgnoreCase(targetCategory) &&
-                folder.file.getParentFile().getName().equalsIgnoreCase(targetMonth)) {
-            folder.expanded = true;
-            Log.d("FolderTree", "📂 Auto-expanded category: " + folder.name);
-        }
-
-        return folder;
+        return node;
     }
 }
