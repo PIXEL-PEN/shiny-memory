@@ -39,25 +39,36 @@ public class FolderTreeAdapter extends RecyclerView.Adapter<FolderTreeAdapter.No
         if (item instanceof FolderNode) {
             FolderNode folder = (FolderNode) item;
             holder.icon.setText(folder.expanded ? "▾" : "▸");
-            holder.name.setText(folder.name);
 
             int depth = folder.depth;
             int padding = 20 * depth;
             holder.itemView.setPadding(padding, holder.itemView.getPaddingTop(), 20, holder.itemView.getPaddingBottom());
 
+            // Remove numeric prefix from month folder name if present
+            String displayName = folder.name;
+            if (depth == 2 && displayName.contains("_")) {
+                displayName = displayName.substring(displayName.indexOf("_") + 1);
+            }
+            holder.name.setText(displayName);
+
             // Styling by folder depth
             if (depth == 2) {
                 holder.name.setTextSize(19); // Month
-                holder.name.setTypeface(Typeface.DEFAULT, Typeface.NORMAL);
+                holder.name.setTypeface(Typeface.DEFAULT);
+                holder.name.setTextColor(android.graphics.Color.DKGRAY);
             } else if (depth == 3) {
                 holder.name.setTextSize(17); // Category
                 holder.name.setTypeface(Typeface.DEFAULT_BOLD);
+                holder.name.setTextColor(android.graphics.Color.BLACK);
             } else {
-                holder.name.setTextSize(16);
+                holder.name.setTextSize(16); // Root or other
                 holder.name.setTypeface(Typeface.DEFAULT);
+                holder.name.setTextColor(android.graphics.Color.BLACK);
             }
 
-            holder.itemView.setOnClickListener(v -> toggleExpanded(folder));
+            holder.itemView.setOnClickListener(v -> {
+                toggleExpanded(folder);
+            });
 
         } else if (item instanceof FileNode) {
             FileNode file = (FileNode) item;
@@ -65,6 +76,7 @@ public class FolderTreeAdapter extends RecyclerView.Adapter<FolderTreeAdapter.No
             holder.name.setText(file.name);
             holder.name.setTextSize(16);
             holder.name.setTypeface(Typeface.DEFAULT);
+            holder.name.setTextColor(android.graphics.Color.BLACK);
 
             int padding = 20 * file.depth;
             holder.itemView.setPadding(padding, holder.itemView.getPaddingTop(), 20, holder.itemView.getPaddingBottom());
@@ -88,13 +100,14 @@ public class FolderTreeAdapter extends RecyclerView.Adapter<FolderTreeAdapter.No
         }
     }
 
-    // ✅ Toggle logic and rebuilding
+    // Toggle expand/collapse and refresh list
     private void toggleExpanded(FolderNode node) {
         node.expanded = !node.expanded;
         rebuildVisibleItems();
         notifyDataSetChanged();
     }
 
+    // Rebuild visible list based on current tree state
     private void rebuildVisibleItems() {
         visibleItems.clear();
         buildVisibleItemsRecursive(rootNode);

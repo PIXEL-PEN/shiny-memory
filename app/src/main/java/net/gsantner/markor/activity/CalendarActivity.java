@@ -23,7 +23,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.Locale;
 
 public class CalendarActivity extends Activity {
@@ -74,6 +73,11 @@ public class CalendarActivity extends Activity {
             Toast.makeText(CalendarActivity.this, "Reset", Toast.LENGTH_SHORT).show();
         });
 
+        // Submit button
+        btnSubmit.setOnClickListener(v -> {
+            createNoteFileAndSeedContent();  // Restores Submit functionality
+        });
+
         // Browser button opens folder tree with selected values
         btnBrowser.setOnClickListener(v -> {
             String selectedCategory = spinnerCategory.getSelectedItem().toString();
@@ -89,5 +93,62 @@ public class CalendarActivity extends Activity {
         });
     }
 
-    // (Unchanged) createNoteFileAndSeedContent() remains the same
+    private void createNoteFileAndSeedContent() {
+        String title = inputNoteTitle.getText().toString().trim();
+        if (title.isEmpty()) {
+            Toast.makeText(this, "Please enter a note title.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String category = spinnerCategory.getSelectedItem().toString();
+
+        // Use the selected date
+        Calendar calendar = selectedCalendarDate;
+        SimpleDateFormat yearFormat = new SimpleDateFormat("yyyy", Locale.getDefault());
+        SimpleDateFormat monthFormat = new SimpleDateFormat("MM_MMMM", Locale.getDefault());
+        SimpleDateFormat timestampFormat = new SimpleDateFormat("EEE. MMMM dd yyyy | h:mm a", Locale.getDefault());
+
+        String year = yearFormat.format(calendar.getTime());
+        String month = monthFormat.format(calendar.getTime());
+        String timestamp = timestampFormat.format(calendar.getTime());
+
+        File root = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "markor default");
+        File categoryDir = new File(new File(root, year + "/" + month), category);
+
+        if (!categoryDir.exists() && !categoryDir.mkdirs()) {
+            Toast.makeText(this, "Failed to create folders.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String safeTitle = title.replaceAll("[\\\\/:*?\"<>|]", "_");
+        File noteFile = new File(categoryDir, safeTitle + ".md");
+
+        if (noteFile.exists()) {
+            Toast.makeText(this, "Note already exists.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        try (FileWriter writer = new FileWriter(noteFile)) {
+            writer.write(timestamp + "\n\n");
+            Toast.makeText(this, "Note created: " + noteFile.getName(), Toast.LENGTH_SHORT).show();
+
+            // Open in Markor via FileProvider
+            Uri uri = FileProvider.getUriForFile(this, getPackageName() + ".provider", noteFile);
+            Intent intent = new Intent(Intent.ACTION_EDIT);
+            intent.setDataAndType(uri, "text/markdown");
+            intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            intent.setPackage("net.gsantner.markor");
+
+            try {
+                startActivity(intent);
+            } catch (Exception e) {
+                Toast.makeText(this, "Failed to open note in Markor editor.", Toast.LENGTH_SHORT).show();
+                e.printStackTrace();
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Failed to create note.", Toast.LENGTH_SHORT).show();
+        }
+    }
 }
