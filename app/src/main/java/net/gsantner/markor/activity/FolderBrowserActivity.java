@@ -22,15 +22,18 @@ public class FolderBrowserActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_folder_browser);  // ✅ Load visual layout
+        setContentView(R.layout.activity_folder_browser);
 
         Log.d("FolderTree", "📣 FolderBrowserActivity launched");
 
-        // ✅ Get category from intent
+        // ✅ Read selected category and month from intent
         String selectedCategory = getIntent().getStringExtra("selectedCategory");
-        Log.d("FolderTree", "📌 Selected category: " + selectedCategory);
+        String selectedMonth = getIntent().getStringExtra("selectedMonth");
 
-        // ✅ Build root folder path (confirmed working location)
+        Log.d("FolderTree", "📌 Category: " + selectedCategory);
+        Log.d("FolderTree", "📌 Month: " + selectedMonth);
+
+        // ✅ Root = Markor default
         File rootFolder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "markor default");
 
         if (rootFolder == null || !rootFolder.exists()) {
@@ -39,10 +42,8 @@ public class FolderBrowserActivity extends Activity {
             return;
         }
 
-        Log.d("FolderTree", "📣 Folder scan started: " + rootFolder.getAbsolutePath());
-
-        // ✅ Scan with category awareness
-        FolderNode tree = FolderTreeScanner.scan(rootFolder, selectedCategory);
+        /// ✅ Scan tree — expand specific month + category
+        FolderNode tree = FolderTreeScanner.scan(rootFolder, selectedMonth, selectedCategory);
 
         if (tree == null) {
             Log.w("FolderTree", "⚠️ Tree is null. Aborting.");
@@ -50,9 +51,7 @@ public class FolderBrowserActivity extends Activity {
             return;
         }
 
-        tree.expanded = true;  // Show year folders initially
-
-        // ✅ Bind RecyclerView
+        // ✅ Display result
         recyclerView = findViewById(R.id.folder_browser_recycler);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(new FolderTreeAdapter(tree));
