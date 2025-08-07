@@ -45,13 +45,17 @@ public class FolderBrowserActivity extends Activity {
                 .append("<meta name='viewport' content='width=device-width, initial-scale=1'>")
                 .append("<style>")
                 .append("body { font-family: sans-serif; padding: 16px; font-size: 17px; }")
-                .append(".folder { font-weight: bold; margin: 12px 0; cursor: pointer; font-size: 18px; display: flex; align-items: center; }")
-                .append(".arrow { display: inline-block; width: 1em; transition: transform 0.2s; }")
+                .append(".folder { cursor: pointer; display: flex; align-items: center; margin: 10px 0; }")
+                .append(".arrow { display: inline-block; width: 0.80em; transition: transform 0.2s; margin-right: 6px; color: #d35400; }")
+
                 .append(".folder.collapsed .arrow { transform: rotate(0deg); }")
                 .append(".folder.expanded .arrow { transform: rotate(90deg); }")
                 .append(".file { display: flex; align-items: flex-start; margin-top: 10px; font-size: 16px; gap: 10px; }")
                 .append(".file .icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }")
                 .append(".file .title { font-size: 16px; line-height: 1.4; word-break: break-word; }")
+                .append(".year { font-size: 19px; font-weight: bold; }")
+                .append(".month { font-size: 18px; font-weight: bold; }")
+                .append(".category { font-size: 16px; font-weight: bold; }")
                 .append("a { text-decoration: none; color: #222; }")
                 .append("a:hover { text-decoration: underline; color: #000; }")
                 .append("</style>")
@@ -82,12 +86,22 @@ public class FolderBrowserActivity extends Activity {
         String id = "f" + folder.hashCode();
         String folderIndent = "margin-left: " + (depth * 20) + "px;";
         String expandByDefault = folder.expanded ? "block" : "none";
-        String labelClass = folder.expanded ? "folder expanded" : "folder collapsed";
+
+        String levelClass = "";
+        if (depth == 1) {
+            levelClass = "year";
+        } else if (depth == 2) {
+            levelClass = "month";
+        } else if (depth == 3) {
+            levelClass = "category";
+        }
+
+        String labelClass = "folder " + levelClass + (folder.expanded ? " expanded" : " collapsed");
         String displayName = folder.name.replaceFirst("^\\d{2}_", "");
 
         sb.append("<div id='label_").append(id).append("' class='").append(labelClass)
                 .append("' style='").append(folderIndent).append("' onclick=\"toggle('").append(id).append("','label_").append(id).append("')\">")
-                .append("<span class='arrow'>▶</span>&nbsp;")
+                .append("<span class='arrow'>▶</span>")
                 .append(displayName)
                 .append("</div>");
 
