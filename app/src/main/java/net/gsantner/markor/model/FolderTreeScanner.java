@@ -2,46 +2,49 @@ package net.gsantner.markor.model;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 public class FolderTreeScanner {
 
-    public static FolderNode scan(File rootFolder, String selectedCategory, String selectedMonth) {
-        if (rootFolder == null || !rootFolder.exists()) {
-            return new FolderNode("Empty", rootFolder);  // fallback
-        }
-        FolderNode root = buildTree(rootFolder, 0, selectedCategory, selectedMonth);
-        root.expanded = true;  // ✅ Always expand top-level folder
-        return root;
+    public static FolderNode scan(File root, String selectedCategory, String selectedMonth) {
+        return scanRecursive(root, selectedCategory, selectedMonth, 0);
     }
 
-    private static FolderNode buildTree(File dir, int depth, String selectedCategory, String selectedMonth) {
-        FolderNode node = new FolderNode(dir.getName(), dir);
-        node.depth = depth;
+    private static FolderNode scanRecursive(File folder, String selectedCategory, String selectedMonth, int depth) {
+        if (folder == null || !folder.exists() || !folder.isDirectory()) {
+            return null;
+        }
 
-        File[] files = dir.listFiles();
-        if (files == null) return node;
+        FolderNode folderNode = new FolderNode(folder.getName().replaceFirst("^\\d{2}_", ""), folder);
+        folderNode.subfolders = new ArrayList<>();
+        folderNode.files = new ArrayList<>();
 
-        for (File file : files) {
-            if (file.isDirectory()) {
-                // Skip .res and _res folders
-                String folderName = file.getName().toLowerCase();
-                if (folderName.equals(".res") || folderName.equals("_res")) continue;
+        File[] children = folder.listFiles();
+        if (children != null) {
+            Arrays.sort(children, Comparator.comparing(File::getName));
 
-                FolderNode subfolder = buildTree(file, depth + 1, selectedCategory, selectedMonth);
-
-                // Expand the folder if it matches selected category or month
-                if (file.getName().equalsIgnoreCase(selectedCategory) ||
-                        file.getName().equalsIgnoreCase(selectedMonth)) {
-                    subfolder.expanded = true;
-                    node.expanded = true;  // ensure parent is open
+            for (File file : children) {
+                if (file.isDirectory()) {
+                    FolderNode child = scanRecursive(file, selectedCategory, selectedMonth, depth + 1);
+                    if (child != null) {
+                        folderNode.subfolders.add(child);
+                    }
+                } else if (file.isFile() && file.getName().endsWith(".md")) {
+                    folderNode.files.add(new FileNode(file.getName(), file, depth));
                 }
-
-                node.subfolders.add(subfolder);
-            } else {
-                node.files.add(new FileNode(file.getName(), file, depth + 1));
             }
         }
-        return node;
+
+        // Expand only relevant branches
+        String currentName = folder.getName();
+        if (depth == 0 || currentName.equals("markor default") ||
+                currentName.equals(selectedCategory) ||
+                currentName.equals(selectedMonth)) {
+            folderNode.expanded = true;
+        }
+
+        return folderNode;
     }
 }
