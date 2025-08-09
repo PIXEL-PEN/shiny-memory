@@ -9,8 +9,6 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
-import androidx.core.content.FileProvider; // (left as-is even if unused)
-
 import net.gsantner.markor.R;
 import net.gsantner.markor.model.Document;
 import net.gsantner.markor.model.FileNode;
@@ -50,7 +48,7 @@ public class FolderBrowserActivity extends Activity {
                     return true;
                 }
 
-                // Compatibility: in case any old "file://" links remain
+                // Compatibility: handle any leftover file:// links
                 if (url.startsWith("file://")) {
                     String filePath = android.net.Uri.parse(url).getPath(); // decoded path
                     openInMarkor(filePath);
@@ -83,6 +81,8 @@ public class FolderBrowserActivity extends Activity {
                     if (file.exists()) {
                         Intent intent = new Intent(FolderBrowserActivity.this, DocumentActivity.class);
                         intent.putExtra(Document.EXTRA_FILE, file);
+                        // 👇 Open in View (Preview) mode
+                        intent.putExtra(Document.EXTRA_DO_PREVIEW, true);
                         startActivity(intent);
                     } else {
                         android.widget.Toast.makeText(
@@ -183,7 +183,7 @@ public class FolderBrowserActivity extends Activity {
         for (FileNode file : folder.files) {
             sb.append("<div class='file' style='").append(fileIndent).append("'>")
                     .append("<div class='icon'>📄</div>")
-                    .append("<div class='title'><a href='note:")  // <-- switched to custom scheme
+                    .append("<div class='title'><a href='note:")  // custom scheme
                     .append(file.file.getAbsolutePath())
                     .append("'>")
                     .append(file.name).append("</a></div>")

@@ -106,7 +106,7 @@ public class CalendarActivity extends Activity {
         Calendar calendar = selectedCalendarDate;
         SimpleDateFormat yearFormat = new SimpleDateFormat("yyyy", Locale.getDefault());
         SimpleDateFormat monthFormat = new SimpleDateFormat("MM_MMMM", Locale.getDefault());
-        SimpleDateFormat timestampFormat = new SimpleDateFormat("EEE. MMMM dd yyyy | h:mm a", Locale.getDefault());
+        SimpleDateFormat timestampFormat = new SimpleDateFormat("EEE. MMMM dd, yyyy | h:mm a", Locale.getDefault());
 
         String year = yearFormat.format(calendar.getTime());
         String month = monthFormat.format(calendar.getTime());
