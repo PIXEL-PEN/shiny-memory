@@ -1,13 +1,18 @@
 package net.gsantner.markor.activity;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.Log;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import androidx.core.content.FileProvider; // (left as-is even if unused)
+
 import net.gsantner.markor.R;
+import net.gsantner.markor.model.Document;
 import net.gsantner.markor.model.FileNode;
 import net.gsantner.markor.model.FolderNode;
 import net.gsantner.markor.model.FolderTreeScanner;
@@ -16,7 +21,10 @@ import java.io.File;
 
 public class FolderBrowserActivity extends Activity {
 
+    private static final String TAG = "WebViewDebug";
+
     private WebView webView;
+    private File rootFolder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,12 +35,73 @@ public class FolderBrowserActivity extends Activity {
 
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
-        webView.setWebViewClient(new WebViewClient());
+
+        webView.setWebViewClient(new WebViewClient() {
+            // Android 5.0+
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, android.webkit.WebResourceRequest request) {
+                final String url = request.getUrl() != null ? request.getUrl().toString() : "";
+                Log.d(TAG, "Tapped URL: " + url);
+
+                // Preferred path: custom scheme
+                if (url.startsWith("note:")) {
+                    String filePath = android.net.Uri.decode(url.substring("note:".length()));
+                    openInMarkor(filePath);
+                    return true;
+                }
+
+                // Compatibility: in case any old "file://" links remain
+                if (url.startsWith("file://")) {
+                    String filePath = android.net.Uri.parse(url).getPath(); // decoded path
+                    openInMarkor(filePath);
+                    return true;
+                }
+
+                return false;
+            }
+
+            // Legacy (pre-5.0)
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                Log.d(TAG, "Tapped URL (legacy): " + url);
+                if (url != null && url.startsWith("note:")) {
+                    String filePath = android.net.Uri.decode(url.substring("note:".length()));
+                    openInMarkor(filePath);
+                    return true;
+                }
+                if (url != null && url.startsWith("file://")) {
+                    String filePath = android.net.Uri.parse(url).getPath();
+                    openInMarkor(filePath);
+                    return true;
+                }
+                return false;
+            }
+
+            private void openInMarkor(String filePath) {
+                try {
+                    File file = new File(filePath);
+                    if (file.exists()) {
+                        Intent intent = new Intent(FolderBrowserActivity.this, DocumentActivity.class);
+                        intent.putExtra(Document.EXTRA_FILE, file);
+                        startActivity(intent);
+                    } else {
+                        android.widget.Toast.makeText(
+                                FolderBrowserActivity.this,
+                                "File not found:\n" + filePath,
+                                android.widget.Toast.LENGTH_SHORT
+                        ).show();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
 
         String selectedCategory = getIntent().getStringExtra("selectedCategory");
         String selectedMonth = getIntent().getStringExtra("selectedMonth");
 
-        File rootFolder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "markor default");
+        rootFolder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "markor default");
+
         FolderNode tree = FolderTreeScanner.scan(rootFolder, selectedCategory, selectedMonth);
 
         String html = buildHtml(tree, selectedCategory, selectedMonth);
@@ -47,7 +116,6 @@ public class FolderBrowserActivity extends Activity {
                 .append("body { font-family: sans-serif; padding: 16px; font-size: 17px; }")
                 .append(".folder { cursor: pointer; display: flex; align-items: center; margin: 10px 0; }")
                 .append(".arrow { display: inline-block; width: 0.80em; transition: transform 0.2s; margin-right: 6px; color: #d35400; }")
-
                 .append(".folder.collapsed .arrow { transform: rotate(0deg); }")
                 .append(".folder.expanded .arrow { transform: rotate(90deg); }")
                 .append(".file { display: flex; align-items: flex-start; margin-top: 10px; font-size: 16px; gap: 10px; }")
@@ -76,13 +144,12 @@ public class FolderBrowserActivity extends Activity {
                 .append("</script>")
                 .append("</head><body>");
 
-        appendFolderHtml(sb, root, 0, selectedCategory, selectedMonth);
-
+        appendFolderHtml(sb, root, 0);
         sb.append("</body></html>");
         return sb.toString();
     }
 
-    private void appendFolderHtml(StringBuilder sb, FolderNode folder, int depth, String selectedCategory, String selectedMonth) {
+    private void appendFolderHtml(StringBuilder sb, FolderNode folder, int depth) {
         String id = "f" + folder.hashCode();
         String folderIndent = "margin-left: " + (depth * 20) + "px;";
         String expandByDefault = folder.expanded ? "block" : "none";
@@ -108,7 +175,7 @@ public class FolderBrowserActivity extends Activity {
         sb.append("<div id='").append(id).append("' style='display:").append(expandByDefault).append(";'>");
 
         for (FolderNode sub : folder.subfolders) {
-            appendFolderHtml(sb, sub, depth + 1, selectedCategory, selectedMonth);
+            appendFolderHtml(sb, sub, depth + 1);
         }
 
         String fileIndent = "margin-left: " + ((depth * 20) + 20) + "px;";
@@ -116,7 +183,9 @@ public class FolderBrowserActivity extends Activity {
         for (FileNode file : folder.files) {
             sb.append("<div class='file' style='").append(fileIndent).append("'>")
                     .append("<div class='icon'>📄</div>")
-                    .append("<div class='title'><a href='file://").append(file.file.getAbsolutePath()).append("'>")
+                    .append("<div class='title'><a href='note:")  // <-- switched to custom scheme
+                    .append(file.file.getAbsolutePath())
+                    .append("'>")
                     .append(file.name).append("</a></div>")
                     .append("</div>");
         }
