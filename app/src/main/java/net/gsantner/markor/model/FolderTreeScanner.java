@@ -3,32 +3,23 @@ package net.gsantner.markor.model;
 import android.util.Log;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
-
-
-
+import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributes;
 
 public class FolderTreeScanner {
 
     // Matches leading numeric prefix like "01_January" or "1-January"
     private static final Pattern LEADING_NUM = Pattern.compile("^(\\d{1,2})[_-].*");
-
     private static final Pattern MD_SUFFIX = Pattern.compile("\\.md$", Pattern.CASE_INSENSITIVE);
-
-    public static String formatShortDate(long timeMillis) {
-        return new SimpleDateFormat("EEE |d MMM | yy", Locale.ENGLISH)
-                .format(new Date(timeMillis));
-    }
-
 
     /**
      * Public entry: scan the tree and mark expansions so UI can show
@@ -93,8 +84,8 @@ public class FolderTreeScanner {
         // Sort directories: first by leading numeric prefix (01..12), fallback alpha
         sortSubfoldersByPrefix(dirs);
 
-        // Sort files alphabetically (change to lastModified if you prefer)
-        Collections.sort(docs, Comparator.comparing(File::getName, String::compareToIgnoreCase));
+        // Sort files by Date Created (newest → oldest)
+        Collections.sort(docs, (a, b) -> Long.compare(getCreationTimeMillis(b), getCreationTimeMillis(a)));
 
         // Determine if this node is the selected month folder
         boolean thisIsSelectedMonth =
@@ -119,7 +110,6 @@ public class FolderTreeScanner {
             String displayName = MD_SUFFIX.matcher(f.getName()).replaceAll("");
             node.files.add(new FileNode(displayName, f, depth + 1));
         }
-
 
         // Expansion logic:
         // - Root (depth 0) expanded by caller (post-processing).
@@ -148,6 +138,22 @@ public class FolderTreeScanner {
     }
 
     // ----- Helpers -----
+
+    public static String formatShortDate(long timeMillis) {
+        // Spaces around pipes are baked in
+        return new SimpleDateFormat("EEE | d MMM | yy", Locale.ENGLISH)
+                .format(new Date(timeMillis));
+    }
+
+    // Public so UI can use it too; falls back to lastModified if needed
+    public static long getCreationTimeMillis(File f) {
+        try {
+            BasicFileAttributes a = Files.readAttributes(f.toPath(), BasicFileAttributes.class);
+            return a.creationTime().toMillis();
+        } catch (Exception ignored) {
+            return f.lastModified();
+        }
+    }
 
     private static boolean containsMonth(FolderNode yearNode, String selectedMonth) {
         if (selectedMonth == null) return false;

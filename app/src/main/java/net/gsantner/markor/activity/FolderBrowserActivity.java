@@ -16,6 +16,9 @@ import net.gsantner.markor.model.FolderNode;
 import net.gsantner.markor.model.FolderTreeScanner;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class FolderBrowserActivity extends Activity {
 
@@ -41,16 +44,14 @@ public class FolderBrowserActivity extends Activity {
                 final String url = request.getUrl() != null ? request.getUrl().toString() : "";
                 Log.d(TAG, "Tapped URL: " + url);
 
-                // Preferred path: custom scheme
                 if (url.startsWith("note:")) {
                     String filePath = android.net.Uri.decode(url.substring("note:".length()));
                     openInMarkor(filePath);
                     return true;
                 }
 
-                // Compatibility: handle any leftover file:// links
                 if (url.startsWith("file://")) {
-                    String filePath = android.net.Uri.parse(url).getPath(); // decoded path
+                    String filePath = android.net.Uri.parse(url).getPath();
                     openInMarkor(filePath);
                     return true;
                 }
@@ -81,7 +82,6 @@ public class FolderBrowserActivity extends Activity {
                     if (file.exists()) {
                         Intent intent = new Intent(FolderBrowserActivity.this, DocumentActivity.class);
                         intent.putExtra(Document.EXTRA_FILE, file);
-                        // 👇 Open in View (Preview) mode
                         intent.putExtra(Document.EXTRA_DO_PREVIEW, true);
                         startActivity(intent);
                     } else {
@@ -121,7 +121,8 @@ public class FolderBrowserActivity extends Activity {
                 .append(".file { display: flex; align-items: flex-start; margin-top: 10px; font-size: 16px; gap: 10px; }")
                 .append(".file .icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }")
                 .append(".note-title { font-weight: 600; }")
-                .append(".note-meta  { font-size: 12px; color: #6e6e6e; margin-left: 6px; }")
+                .append(".note-meta  { font-size: 12px; color: #6e6e6e; margin-left: 4px; white-space: nowrap; }")
+                .append(".note-meta span.sep { padding: 0 2px; }")
                 .append(".year { font-size: 19px; font-weight: bold; }")
                 .append(".month { font-size: 18px; font-weight: bold; }")
                 .append(".category { font-size: 16px; font-weight: bold; }")
@@ -180,17 +181,28 @@ public class FolderBrowserActivity extends Activity {
         }
 
         String fileIndent = "margin-left: " + ((depth * 20) + 20) + "px;";
+        SimpleDateFormat sdf = new SimpleDateFormat("EEE", Locale.getDefault());
+        SimpleDateFormat sdfDay = new SimpleDateFormat("d", Locale.getDefault());
+        SimpleDateFormat sdfMonth = new SimpleDateFormat("MMM", Locale.getDefault());
+        SimpleDateFormat sdfYear = new SimpleDateFormat("yy", Locale.getDefault());
 
         for (FileNode file : folder.files) {
-            final String title = file.name; // already without ".md"
-            final String date  = FolderTreeScanner.formatShortDate(file.file.lastModified());
+            Date created = new Date(file.file.lastModified()); // Using lastModified as creation proxy
+            String dateStr = "<span class='note-meta'>"
+                    + sdf.format(created) + "<span class='sep'>|</span>"
+                    + sdfDay.format(created) + " " + sdfMonth.format(created) + "<span class='sep'>|</span>"
+                    + sdfYear.format(created)
+                    + "</span>";
 
             sb.append("<div class='file' style='").append(fileIndent).append("'>")
                     .append("<div class='icon'>📄</div>")
-                    .append("<a href='note:").append(file.file.getAbsolutePath()).append("'>")
-                    .append("<span class='note-title'>").append(title).append("</span>")
-                    .append("<span class='note-meta'>").append(date).append("</span>")
-                    .append("</a>")
+                    .append("<div class='title'><a class='note-title' href='note:")
+                    .append(file.file.getAbsolutePath())
+                    .append("'>")
+                    .append(file.name.replaceAll("\\.md$", ""))
+                    .append("</a> ")
+                    .append(dateStr)
+                    .append("</div>")
                     .append("</div>");
         }
 
