@@ -179,16 +179,17 @@ public class FolderBrowserActivity extends Activity {
 
         String fileIndent = "margin-left: " + ((depth * 20) + 20) + "px;";
         SimpleDateFormat sdfWk = new SimpleDateFormat("EEE", Locale.getDefault());
-        SimpleDateFormat sdfDay = new SimpleDateFormat("d",   Locale.getDefault());
+        SimpleDateFormat sdfDay = new SimpleDateFormat("d", Locale.getDefault());
         SimpleDateFormat sdfMon = new SimpleDateFormat("MMM", Locale.getDefault());
-        SimpleDateFormat sdfYr  = new SimpleDateFormat("yy",  Locale.getDefault());
+        SimpleDateFormat sdfYr = new SimpleDateFormat("yy", Locale.getDefault());
 
         for (FileNode file : folder.files) {
-            Date t = new Date(file.file.lastModified()); // currently using modified time
+            long tMillis = FolderTreeScanner.getCreationTimeMillis(file.file); // TRUE Date Creation
+            Date t = new Date(tMillis);
             String dateStr = "<div class='note-meta'>"
                     + sdfWk.format(t) + "<span class='sep'>|</span>"
                     + sdfDay.format(t) + " " + sdfMon.format(t) + "<span class='sep'>|</span>"
-                    + sdfYr .format(t)
+                    + sdfYr.format(t)
                     + "</div>";
 
             sb.append("<div class='file' style='").append(fileIndent).append("'>")

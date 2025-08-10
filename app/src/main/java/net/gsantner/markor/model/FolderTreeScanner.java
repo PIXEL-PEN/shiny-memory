@@ -19,15 +19,15 @@ public class FolderTreeScanner {
 
     // Matches leading numeric prefix like "01_January" or "1-January"
     private static final Pattern LEADING_NUM = Pattern.compile("^(\\d{1,2})[_-].*");
-    private static final Pattern MD_SUFFIX = Pattern.compile("\\.md$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern MD_SUFFIX   = Pattern.compile("\\.md$", Pattern.CASE_INSENSITIVE);
 
     /**
      * Public entry: scan the tree and mark expansions so UI can show
      * root > year > selectedMonth > selectedCategory expanded.
      *
-     * @param root               the Markor root folder (e.g., /Documents/markor default)
-     * @param selectedCategory   e.g., "General"
-     * @param selectedMonth      e.g., "08_August" (case-insensitive compare)
+     * @param root             the Markor root folder (e.g., /Documents/markor default)
+     * @param selectedCategory e.g., "General"
+     * @param selectedMonth    e.g., "08_August" (case-insensitive compare)
      */
     public static FolderNode scan(File root, String selectedCategory, String selectedMonth) {
         if (root == null || !root.exists() || !root.isDirectory()) {
@@ -47,11 +47,11 @@ public class FolderTreeScanner {
      * Recursively build the tree, sorting directories by numeric prefix (01..12) first,
      * and expanding only along the path (year -> month -> category).
      *
-     * @param dir                current directory
-     * @param depth              0=root, 1=year, 2=month, 3=category, ...
-     * @param selectedCategory   category name to expand inside the selectedMonth
-     * @param selectedMonth      month folder name like "08_August"
-     * @param monthMatchedAbove  true if an ancestor already matched the selectedMonth
+     * @param dir               current directory
+     * @param depth             0=root, 1=year, 2=month, 3=category, ...
+     * @param selectedCategory  category name to expand inside the selectedMonth
+     * @param selectedMonth     month folder name like "08_August"
+     * @param monthMatchedAbove true if an ancestor already matched the selectedMonth
      */
     private static FolderNode scanRecursive(File dir,
                                             int depth,
@@ -145,7 +145,7 @@ public class FolderTreeScanner {
                 .format(new Date(timeMillis));
     }
 
-    // Public so UI can use it too; falls back to lastModified if needed
+    // Creation time with safe fallback to lastModified()
     public static long getCreationTimeMillis(File f) {
         try {
             BasicFileAttributes a = Files.readAttributes(f.toPath(), BasicFileAttributes.class);
@@ -174,9 +174,10 @@ public class FolderTreeScanner {
             int na = extractLeadingNumber(a.getName());
             int nb = extractLeadingNumber(b.getName());
 
-            // If either has a number, sort by number; else fallback alpha
+            // If either has a number, sort by that number; if both or neither, fall back to alpha
             if (na != Integer.MAX_VALUE || nb != Integer.MAX_VALUE) {
-                return Integer.compare(na, nb);
+                int cmp = Integer.compare(na, nb);
+                if (cmp != 0) return cmp;
             }
             return a.getName().compareToIgnoreCase(b.getName());
         });
