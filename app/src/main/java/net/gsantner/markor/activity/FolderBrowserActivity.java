@@ -114,13 +114,10 @@ public class FolderBrowserActivity extends Activity {
                 .append(".arrow { display: inline-block; width: 0.80em; transition: transform 0.2s; margin-right: 6px; color: #d35400; }")
                 .append(".folder.collapsed .arrow { transform: rotate(0deg); }")
                 .append(".folder.expanded .arrow { transform: rotate(90deg); }")
-                // Slightly more space between items, but no extra line spacing within a title
-                .append(".file { display: flex; align-items: flex-start; margin: 14px 0 0; font-size: 16px; gap: 10px; }")
+                .append(".file { display: flex; align-items: flex-start; margin: 8px 0 0; font-size: 16px; gap: 10px; padding-bottom: 6px; border-bottom: 1px solid #ddd; }")
                 .append(".file .icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }")
-                // Title stands out a touch more; normal line-height for paragraph-like wrapping
-                .append(".note-title { font-size: 17px; font-weight: 500; line-height: 1.25; }")
-                // Date sits on its own line below the title, subtle and tight
-                .append(".note-meta  { font-size: 12px; color: #6e6e6e; margin-top: 2px; }")
+                .append(".note-title { font-size: 17px; font-weight: 500; }")
+                .append(".note-meta  { font-size: 12px; color: #6e6e6e; margin-left: 0; white-space: nowrap; display: block; }")
                 .append(".note-meta span.sep { padding: 0 2px; }")
                 .append(".year { font-size: 19px; font-weight: bold; }")
                 .append(".month { font-size: 18px; font-weight: bold; }")
@@ -149,6 +146,7 @@ public class FolderBrowserActivity extends Activity {
         sb.append("</body></html>");
         return sb.toString();
     }
+
 
     private void appendFolderHtml(StringBuilder sb, FolderNode folder, int depth) {
         String id = "f" + folder.hashCode();
