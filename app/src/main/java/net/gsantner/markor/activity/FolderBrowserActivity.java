@@ -120,7 +120,8 @@ public class FolderBrowserActivity extends Activity {
                 .append(".folder.expanded .arrow { transform: rotate(90deg); }")
                 .append(".file { display: flex; align-items: flex-start; margin-top: 10px; font-size: 16px; gap: 10px; }")
                 .append(".file .icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }")
-                .append(".note-title { font-weight: 600; }")
+                .append(".note-title { font-size: 17px; font-weight: 500; }")
+
                 .append(".note-meta  { font-size: 12px; color: #6e6e6e; margin-left: 4px; white-space: nowrap; }")
                 .append(".note-meta span.sep { padding: 0 2px; }")
                 .append(".year { font-size: 19px; font-weight: bold; }")
