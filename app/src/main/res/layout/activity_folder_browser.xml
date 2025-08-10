@@ -5,6 +5,9 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <include layout="@layout/include_markor_toolbar"/>
+
+
     <WebView
         android:id="@+id/folder_browser_webview"
         android:layout_width="match_parent"

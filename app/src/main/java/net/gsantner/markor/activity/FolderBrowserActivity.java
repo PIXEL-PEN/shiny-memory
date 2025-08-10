@@ -5,9 +5,11 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
+import android.view.MenuItem;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Toolbar;
 
 import net.gsantner.markor.R;
 import net.gsantner.markor.model.Document;
@@ -32,13 +34,25 @@ public class FolderBrowserActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_folder_browser);
 
+        // ✅ Add top black toolbar with back arrow
+        Toolbar tb = findViewById(R.id.toolbar);
+        if (tb != null) {
+            setActionBar(tb);
+            android.app.ActionBar ab = getActionBar();
+            if (ab != null) {
+                ab.setDisplayHomeAsUpEnabled(true);
+                ab.setHomeButtonEnabled(true);
+                ab.setTitle("Browse"); // optional
+            }
+        }
+
         webView = findViewById(R.id.folder_browser_webview);
 
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
 
         webView.setWebViewClient(new WebViewClient() {
-            @Override // Android 5.0+
+            @Override
             public boolean shouldOverrideUrlLoading(WebView view, android.webkit.WebResourceRequest request) {
                 final String url = request.getUrl() != null ? request.getUrl().toString() : "";
                 Log.d(TAG, "Tapped URL: " + url);
@@ -56,7 +70,7 @@ public class FolderBrowserActivity extends Activity {
                 return false;
             }
 
-            @Override // Legacy (pre-5.0)
+            @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 Log.d(TAG, "Tapped URL (legacy): " + url);
                 if (url != null && url.startsWith("note:")) {
@@ -97,11 +111,20 @@ public class FolderBrowserActivity extends Activity {
         String selectedMonth = getIntent().getStringExtra("selectedMonth");
 
         rootFolder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "markor default");
-
         FolderNode tree = FolderTreeScanner.scan(rootFolder, selectedCategory, selectedMonth);
 
         String html = buildHtml(tree, selectedCategory, selectedMonth);
         webView.loadDataWithBaseURL(null, html, "text/html", "utf-8", null);
+    }
+
+    // ✅ Back arrow handler
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private String buildHtml(FolderNode root, String selectedCategory, String selectedMonth) {
@@ -147,20 +170,15 @@ public class FolderBrowserActivity extends Activity {
         return sb.toString();
     }
 
-
     private void appendFolderHtml(StringBuilder sb, FolderNode folder, int depth) {
         String id = "f" + folder.hashCode();
         String folderIndent = "margin-left: " + (depth * 20) + "px;";
         String expandByDefault = folder.expanded ? "block" : "none";
 
         String levelClass = "";
-        if (depth == 1) {
-            levelClass = "year";
-        } else if (depth == 2) {
-            levelClass = "month";
-        } else if (depth == 3) {
-            levelClass = "category";
-        }
+        if (depth == 1) levelClass = "year";
+        else if (depth == 2) levelClass = "month";
+        else if (depth == 3) levelClass = "category";
 
         String labelClass = "folder " + levelClass + (folder.expanded ? " expanded" : " collapsed");
         String displayName = folder.name.replaceFirst("^\\d{2}_", "");
@@ -179,13 +197,12 @@ public class FolderBrowserActivity extends Activity {
 
         String fileIndent = "margin-left: " + ((depth * 20) + 20) + "px;";
         SimpleDateFormat sdfWk = new SimpleDateFormat("EEE", Locale.getDefault());
-        SimpleDateFormat sdfDay = new SimpleDateFormat("d", Locale.getDefault());
+        SimpleDateFormat sdfDay = new SimpleDateFormat("d",   Locale.getDefault());
         SimpleDateFormat sdfMon = new SimpleDateFormat("MMM", Locale.getDefault());
-        SimpleDateFormat sdfYr = new SimpleDateFormat("yy", Locale.getDefault());
+        SimpleDateFormat sdfYr  = new SimpleDateFormat("yy",  Locale.getDefault());
 
         for (FileNode file : folder.files) {
-            long tMillis = FolderTreeScanner.getCreationTimeMillis(file.file); // TRUE Date Creation
-            Date t = new Date(tMillis);
+            Date t = new Date(file.file.lastModified());
             String dateStr = "<div class='note-meta'>"
                     + sdfWk.format(t) + "<span class='sep'>|</span>"
                     + sdfDay.format(t) + " " + sdfMon.format(t) + "<span class='sep'>|</span>"
@@ -202,7 +219,6 @@ public class FolderBrowserActivity extends Activity {
                     .append("</div>")
                     .append("</div>");
         }
-
         sb.append("</div>");
     }
 }

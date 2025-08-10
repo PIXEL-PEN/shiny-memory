@@ -5,7 +5,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.view.View;
+import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CalendarView;
@@ -13,6 +13,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.Toast;
+import android.widget.Toolbar;
 
 import androidx.core.content.FileProvider;
 
@@ -38,6 +39,16 @@ public class CalendarActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calendar);
+
+        // Setup toolbar (Markor style top bar)
+        Toolbar tb = findViewById(R.id.toolbar);
+        setActionBar(tb);
+        android.app.ActionBar ab = getActionBar();
+        if (ab != null) {
+            ab.setDisplayHomeAsUpEnabled(true);
+            ab.setHomeButtonEnabled(true);
+            ab.setTitle("Calendar");
+        }
 
         // Initialize views
         inputNoteTitle = findViewById(R.id.input_note_title);
@@ -75,14 +86,14 @@ public class CalendarActivity extends Activity {
 
         // Submit button
         btnSubmit.setOnClickListener(v -> {
-            createNoteFileAndSeedContent();  // Restores Submit functionality
+            createNoteFileAndSeedContent();
         });
 
-        // Browser button opens folder tree with selected values
+        // Browser button opens folder tree
         btnBrowser.setOnClickListener(v -> {
             String selectedCategory = spinnerCategory.getSelectedItem().toString();
 
-            // Get selected month as "MM_MMMM" (e.g. "08_August")
+            // Get selected month as "MM_MMMM" (e.g., "08_August")
             SimpleDateFormat monthFormat = new SimpleDateFormat("MM_MMMM", Locale.getDefault());
             String selectedMonth = monthFormat.format(selectedCalendarDate.getTime());
 
@@ -91,6 +102,15 @@ public class CalendarActivity extends Activity {
             intent.putExtra("selectedMonth", selectedMonth);
             startActivity(intent);
         });
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void createNoteFileAndSeedContent() {
