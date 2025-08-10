@@ -38,8 +38,7 @@ public class FolderBrowserActivity extends Activity {
         webSettings.setJavaScriptEnabled(true);
 
         webView.setWebViewClient(new WebViewClient() {
-            // Android 5.0+
-            @Override
+            @Override // Android 5.0+
             public boolean shouldOverrideUrlLoading(WebView view, android.webkit.WebResourceRequest request) {
                 final String url = request.getUrl() != null ? request.getUrl().toString() : "";
                 Log.d(TAG, "Tapped URL: " + url);
@@ -49,18 +48,15 @@ public class FolderBrowserActivity extends Activity {
                     openInMarkor(filePath);
                     return true;
                 }
-
                 if (url.startsWith("file://")) {
                     String filePath = android.net.Uri.parse(url).getPath();
                     openInMarkor(filePath);
                     return true;
                 }
-
                 return false;
             }
 
-            // Legacy (pre-5.0)
-            @Override
+            @Override // Legacy (pre-5.0)
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 Log.d(TAG, "Tapped URL (legacy): " + url);
                 if (url != null && url.startsWith("note:")) {
@@ -118,11 +114,13 @@ public class FolderBrowserActivity extends Activity {
                 .append(".arrow { display: inline-block; width: 0.80em; transition: transform 0.2s; margin-right: 6px; color: #d35400; }")
                 .append(".folder.collapsed .arrow { transform: rotate(0deg); }")
                 .append(".folder.expanded .arrow { transform: rotate(90deg); }")
-                .append(".file { display: flex; align-items: flex-start; margin-top: 10px; font-size: 16px; gap: 10px; }")
+                // Slightly more space between items, but no extra line spacing within a title
+                .append(".file { display: flex; align-items: flex-start; margin: 14px 0 0; font-size: 16px; gap: 10px; }")
                 .append(".file .icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }")
-                .append(".note-title { font-size: 17px; font-weight: 500; }")
-
-                .append(".note-meta  { font-size: 12px; color: #6e6e6e; margin-left: 4px; white-space: nowrap; }")
+                // Title stands out a touch more; normal line-height for paragraph-like wrapping
+                .append(".note-title { font-size: 17px; font-weight: 500; line-height: 1.25; }")
+                // Date sits on its own line below the title, subtle and tight
+                .append(".note-meta  { font-size: 12px; color: #6e6e6e; margin-top: 2px; }")
                 .append(".note-meta span.sep { padding: 0 2px; }")
                 .append(".year { font-size: 19px; font-weight: bold; }")
                 .append(".month { font-size: 18px; font-weight: bold; }")
@@ -182,26 +180,25 @@ public class FolderBrowserActivity extends Activity {
         }
 
         String fileIndent = "margin-left: " + ((depth * 20) + 20) + "px;";
-        SimpleDateFormat sdf = new SimpleDateFormat("EEE", Locale.getDefault());
-        SimpleDateFormat sdfDay = new SimpleDateFormat("d", Locale.getDefault());
-        SimpleDateFormat sdfMonth = new SimpleDateFormat("MMM", Locale.getDefault());
-        SimpleDateFormat sdfYear = new SimpleDateFormat("yy", Locale.getDefault());
+        SimpleDateFormat sdfWk = new SimpleDateFormat("EEE", Locale.getDefault());
+        SimpleDateFormat sdfDay = new SimpleDateFormat("d",   Locale.getDefault());
+        SimpleDateFormat sdfMon = new SimpleDateFormat("MMM", Locale.getDefault());
+        SimpleDateFormat sdfYr  = new SimpleDateFormat("yy",  Locale.getDefault());
 
         for (FileNode file : folder.files) {
-            Date created = new Date(file.file.lastModified()); // Using lastModified as creation proxy
-            String dateStr = "<span class='note-meta'>"
-                    + sdf.format(created) + "<span class='sep'>|</span>"
-                    + sdfDay.format(created) + " " + sdfMonth.format(created) + "<span class='sep'>|</span>"
-                    + sdfYear.format(created)
-                    + "</span>";
+            Date t = new Date(file.file.lastModified()); // currently using modified time
+            String dateStr = "<div class='note-meta'>"
+                    + sdfWk.format(t) + "<span class='sep'>|</span>"
+                    + sdfDay.format(t) + " " + sdfMon.format(t) + "<span class='sep'>|</span>"
+                    + sdfYr .format(t)
+                    + "</div>";
 
             sb.append("<div class='file' style='").append(fileIndent).append("'>")
                     .append("<div class='icon'>📄</div>")
-                    .append("<div class='title'><a class='note-title' href='note:")
-                    .append(file.file.getAbsolutePath())
-                    .append("'>")
-                    .append(file.name.replaceAll("\\.md$", ""))
-                    .append("</a> ")
+                    .append("<div>")
+                    .append("<a href='note:").append(file.file.getAbsolutePath()).append("'>")
+                    .append("<span class='note-title'>").append(file.name.replaceAll("\\.md$", "")).append("</span>")
+                    .append("</a>")
                     .append(dateStr)
                     .append("</div>")
                     .append("</div>");
