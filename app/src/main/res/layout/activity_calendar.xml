@@ -129,7 +129,9 @@
             android:maxLength="250"
             android:maxLines="10"
             android:gravity="top|start"
-            android:background="@android:drawable/edit_text"
+            android:background="@drawable/bg_edittext_amber"
+
+
             android:padding="8dp"
             android:scrollbars="vertical"
             android:overScrollMode="always"
