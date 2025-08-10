@@ -10,10 +10,25 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
+
+
+
 public class FolderTreeScanner {
 
     // Matches leading numeric prefix like "01_January" or "1-January"
     private static final Pattern LEADING_NUM = Pattern.compile("^(\\d{1,2})[_-].*");
+
+    private static final Pattern MD_SUFFIX = Pattern.compile("\\.md$", Pattern.CASE_INSENSITIVE);
+
+    public static String formatShortDate(long timeMillis) {
+        return new SimpleDateFormat("EEE |d MMM | yy", Locale.ENGLISH)
+                .format(new Date(timeMillis));
+    }
+
 
     /**
      * Public entry: scan the tree and mark expansions so UI can show
@@ -99,10 +114,12 @@ public class FolderTreeScanner {
             node.subfolders.add(child);
         }
 
-        // Attach files
+        // Attach files (strip ".md" for display)
         for (File f : docs) {
-            node.files.add(new FileNode(f.getName(), f, depth + 1));
+            String displayName = MD_SUFFIX.matcher(f.getName()).replaceAll("");
+            node.files.add(new FileNode(displayName, f, depth + 1));
         }
+
 
         // Expansion logic:
         // - Root (depth 0) expanded by caller (post-processing).

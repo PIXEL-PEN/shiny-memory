@@ -120,7 +120,8 @@ public class FolderBrowserActivity extends Activity {
                 .append(".folder.expanded .arrow { transform: rotate(90deg); }")
                 .append(".file { display: flex; align-items: flex-start; margin-top: 10px; font-size: 16px; gap: 10px; }")
                 .append(".file .icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }")
-                .append(".file .title { font-size: 16px; line-height: 1.4; word-break: break-word; }")
+                .append(".note-title { font-weight: 600; }")
+                .append(".note-meta  { font-size: 12px; color: #6e6e6e; margin-left: 6px; }")
                 .append(".year { font-size: 19px; font-weight: bold; }")
                 .append(".month { font-size: 18px; font-weight: bold; }")
                 .append(".category { font-size: 16px; font-weight: bold; }")
@@ -181,12 +182,15 @@ public class FolderBrowserActivity extends Activity {
         String fileIndent = "margin-left: " + ((depth * 20) + 20) + "px;";
 
         for (FileNode file : folder.files) {
+            final String title = file.name; // already without ".md"
+            final String date  = FolderTreeScanner.formatShortDate(file.file.lastModified());
+
             sb.append("<div class='file' style='").append(fileIndent).append("'>")
                     .append("<div class='icon'>📄</div>")
-                    .append("<div class='title'><a href='note:")  // custom scheme
-                    .append(file.file.getAbsolutePath())
-                    .append("'>")
-                    .append(file.name).append("</a></div>")
+                    .append("<a href='note:").append(file.file.getAbsolutePath()).append("'>")
+                    .append("<span class='note-title'>").append(title).append("</span>")
+                    .append("<span class='note-meta'>").append(date).append("</span>")
+                    .append("</a>")
                     .append("</div>");
         }
 
