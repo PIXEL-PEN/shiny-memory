@@ -9,6 +9,8 @@ import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.ImageButton;
+import android.widget.TextView;
 
 import net.gsantner.markor.R;
 import net.gsantner.markor.model.Document;
@@ -33,9 +35,23 @@ public class FolderBrowserActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_folder_browser);
 
-        // Top bar is an inert FrameLayout now; ensure taps do nothing and don’t propagate
-        View tbView = findViewById(R.id.toolbar);
-        if (tbView != null) tbView.setOnClickListener(v -> { /* no-op */ });
+        // ---- Static header (no ActionBar) ----
+        View headerTap = findViewById(R.id.header_click_target);
+        if (headerTap != null) {
+            headerTap.setOnClickListener(v -> finish());
+        }
+        ImageButton backBtn = findViewById(R.id.btn_back);
+        if (backBtn != null) {
+            backBtn.setOnClickListener(v -> finish());
+        }
+        TextView title = findViewById(R.id.title_text);
+        if (title != null) {
+            title.setText("› Browser Tree"); // or "Browser Tree"
+        }
+
+
+
+        // --------------------------------------------
 
         webView = findViewById(R.id.folder_browser_webview);
 
