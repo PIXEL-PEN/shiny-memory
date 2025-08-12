@@ -6,20 +6,41 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.Date;
 import java.util.Locale;
-import java.nio.file.Files;
-import java.nio.file.attribute.BasicFileAttributes;
 
 public class FolderTreeScanner {
 
     // Matches leading numeric prefix like "01_January" or "1-January"
     private static final Pattern LEADING_NUM = Pattern.compile("^(\\d{1,2})[_-].*");
     private static final Pattern MD_SUFFIX   = Pattern.compile("\\.md$", Pattern.CASE_INSENSITIVE);
+
+    // ---- Creation index integration ----
+    private static net.gsantner.markor.model.CreationIndex sCreationIndex;
+
+    public static void setCreationIndex(net.gsantner.markor.model.CreationIndex idx) {
+        sCreationIndex = idx;
+    }
+
+    /** Lookup stable "created" time; lazily backfill (one-time) when missing. */
+    private static long getIndexedCreated(File f) {
+        if (sCreationIndex != null) {
+            Long v = sCreationIndex.get(f);
+            if (v != null && v > 0L) {
+                return v; // already indexed -> stable across edits
+            }
+            // Lazy backfill: adopt current lastModified as creation time once
+            long created = f.lastModified();
+            sCreationIndex.put(f, created);
+            return created;
+        }
+        // No index provided -> fall back
+        return f.lastModified();
+    }
+    // ---- /Creation index integration ----
 
     /**
      * Public entry: scan the tree and mark expansions so UI can show
@@ -39,6 +60,10 @@ public class FolderTreeScanner {
         if (tree != null) {
             // Root always expanded so the user sees content immediately
             tree.expanded = true;
+        }
+        // Persist any lazy backfills so future scans remain stable
+        if (sCreationIndex != null) {
+            sCreationIndex.save();
         }
         return tree;
     }
@@ -66,7 +91,7 @@ public class FolderTreeScanner {
             return node;
         }
 
-        // Partition entries to dirs & files; filter hidden/.res/_res
+        // Partition entries to dirs & files; filter hidden/.res/_res and only allow .md files for docs
         List<File> dirs = new ArrayList<>();
         List<File> docs = new ArrayList<>();
         for (File f : entries) {
@@ -77,15 +102,18 @@ public class FolderTreeScanner {
             if (f.isDirectory()) {
                 dirs.add(f);
             } else if (f.isFile()) {
-                docs.add(f);
+                String lower = name.toLowerCase(Locale.ROOT);
+                if (lower.endsWith(".md")) {
+                    docs.add(f);
+                }
             }
         }
 
         // Sort directories: first by leading numeric prefix (01..12), fallback alpha
         sortSubfoldersByPrefix(dirs);
 
-        // Sort files by Date Created (newest → oldest)
-        Collections.sort(docs, (a, b) -> Long.compare(getCreationTimeMillis(b), getCreationTimeMillis(a)));
+        // Sort files by indexed Date Created (newest → oldest), fallback to lastModified if missing
+        Collections.sort(docs, (a, b) -> Long.compare(getIndexedCreated(b), getIndexedCreated(a)));
 
         // Determine if this node is the selected month folder
         boolean thisIsSelectedMonth =
@@ -140,19 +168,9 @@ public class FolderTreeScanner {
     // ----- Helpers -----
 
     public static String formatShortDate(long timeMillis) {
-        // Spaces around pipes are baked in
-        return new SimpleDateFormat("EEE | d MMM | yy", Locale.ENGLISH)
+        // Spaces around pipes are baked in; keep non-US day/month order
+        return new SimpleDateFormat("EEE | d MMM | yy", Locale.getDefault())
                 .format(new Date(timeMillis));
-    }
-
-    // Creation time with safe fallback to lastModified()
-    public static long getCreationTimeMillis(File f) {
-        try {
-            BasicFileAttributes a = Files.readAttributes(f.toPath(), BasicFileAttributes.class);
-            return a.creationTime().toMillis();
-        } catch (Exception ignored) {
-            return f.lastModified();
-        }
     }
 
     private static boolean containsMonth(FolderNode yearNode, String selectedMonth) {

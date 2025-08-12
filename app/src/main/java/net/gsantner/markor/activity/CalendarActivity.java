@@ -26,6 +26,9 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
 
+import net.gsantner.markor.model.CreationIndex;
+
+
 public class CalendarActivity extends Activity {
 
     private EditText inputNoteTitle;
@@ -160,7 +163,15 @@ public class CalendarActivity extends Activity {
             return;
         }
 
+        // --- NEW: persist true creation time in the index (epoch millis) ---
+        long createdMillis = calendar.getTimeInMillis();
+        CreationIndex cidx = new CreationIndex(this);
+        cidx.put(noteFile, createdMillis);
+        cidx.save();
+        // -------------------------------------------------------------------
+
         try (FileWriter writer = new FileWriter(noteFile)) {
+            // Keep your existing human-readable first line exactly as-is
             writer.write(timestamp + "\n\n");
             Toast.makeText(this, "Note created: " + noteFile.getName(), Toast.LENGTH_SHORT).show();
 
@@ -183,4 +194,5 @@ public class CalendarActivity extends Activity {
             Toast.makeText(this, "Failed to create note.", Toast.LENGTH_SHORT).show();
         }
     }
+
 }

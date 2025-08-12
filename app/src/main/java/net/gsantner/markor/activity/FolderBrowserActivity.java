@@ -46,13 +46,14 @@ public class FolderBrowserActivity extends Activity {
         }
         TextView title = findViewById(R.id.title_text);
         if (title != null) {
-            title.setText("› Browser Tree"); // or "Browser Tree"
+            title.setText("› Browser Tree");
         }
 
-
+        // ---- Creation index for true Date Created sorting ----
+        net.gsantner.markor.model.CreationIndex cidx = new net.gsantner.markor.model.CreationIndex(this);
+        net.gsantner.markor.model.FolderTreeScanner.setCreationIndex(cidx);
 
         // --------------------------------------------
-
         webView = findViewById(R.id.folder_browser_webview);
 
         WebSettings webSettings = webView.getSettings();
@@ -61,7 +62,7 @@ public class FolderBrowserActivity extends Activity {
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, android.webkit.WebResourceRequest request) {
-                final String url = request.getUrl() != null ? request.getUrl().toString() : "";
+                final String url = (request != null && request.getUrl() != null) ? request.getUrl().toString() : "";
                 Log.d(TAG, "Tapped URL: " + url);
 
                 if (url.startsWith("note:")) {
@@ -117,7 +118,10 @@ public class FolderBrowserActivity extends Activity {
         String selectedCategory = getIntent().getStringExtra("selectedCategory");
         String selectedMonth = getIntent().getStringExtra("selectedMonth");
 
-        rootFolder = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), "markor default");
+        rootFolder = new File(
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS),
+                "markor default"
+        );
         FolderNode tree = FolderTreeScanner.scan(rootFolder, selectedCategory, selectedMonth);
 
         String html = buildHtml(tree, selectedCategory, selectedMonth);
@@ -199,7 +203,7 @@ public class FolderBrowserActivity extends Activity {
         SimpleDateFormat sdfYr  = new SimpleDateFormat("yy",  Locale.getDefault());
 
         for (FileNode file : folder.files) {
-            Date t = new Date(file.file.lastModified());
+            Date t = new Date(file.file.lastModified()); // Display stays as modified (per your note)
             String dateStr = "<div class='note-meta'>"
                     + sdfWk.format(t) + "<span class='sep'>|</span>"
                     + sdfDay.format(t) + " " + sdfMon.format(t) + "<span class='sep'>|</span>"
