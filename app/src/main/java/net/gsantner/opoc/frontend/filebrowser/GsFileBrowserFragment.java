@@ -175,7 +175,8 @@ public class GsFileBrowserFragment extends GsFragmentBase<GsSharedPreferencesPro
 
     @Override
     protected void onToolbarClicked(View v) {
-        executeFilterNotebookAction();
+        // Disable Notebook filter / any action on toolbar background tap
+        // This prevents the unexpected search/filter dialog from appearing.
     }
 
     private void checkOptions() {
