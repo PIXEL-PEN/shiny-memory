@@ -47,6 +47,14 @@ public class CalendarActivity extends Activity {
         btnBrowser = findViewById(R.id.btn_browser);
         calendarView = findViewById(R.id.calendarView);
 
+        // Neutralize background taps on the included Markor toolbar (do NOT wire as action bar)
+        View tb = findViewById(R.id.toolbar);
+        if (tb != null) tb.setOnClickListener(v -> { /* no-op */ });
+
+        View appbar = findViewById(R.id.appbar);
+        if (appbar != null) appbar.setOnClickListener(v -> { /* no-op */ });
+
+
         // Spinner setup
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
                 this,

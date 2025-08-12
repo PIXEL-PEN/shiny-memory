@@ -5,11 +5,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
-import android.view.MenuItem;
+import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.Toolbar;
 
 import net.gsantner.markor.R;
 import net.gsantner.markor.model.Document;
@@ -34,17 +33,9 @@ public class FolderBrowserActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_folder_browser);
 
-        // ✅ Add top black toolbar with back arrow
-        Toolbar tb = findViewById(R.id.toolbar);
-        if (tb != null) {
-            setActionBar(tb);
-            android.app.ActionBar ab = getActionBar();
-            if (ab != null) {
-                ab.setDisplayHomeAsUpEnabled(true);
-                ab.setHomeButtonEnabled(true);
-                ab.setTitle("Browse"); // optional
-            }
-        }
+        // Top bar is an inert FrameLayout now; ensure taps do nothing and don’t propagate
+        View tbView = findViewById(R.id.toolbar);
+        if (tbView != null) tbView.setOnClickListener(v -> { /* no-op */ });
 
         webView = findViewById(R.id.folder_browser_webview);
 
@@ -115,16 +106,6 @@ public class FolderBrowserActivity extends Activity {
 
         String html = buildHtml(tree, selectedCategory, selectedMonth);
         webView.loadDataWithBaseURL(null, html, "text/html", "utf-8", null);
-    }
-
-    // ✅ Back arrow handler
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            onBackPressed();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     private String buildHtml(FolderNode root, String selectedCategory, String selectedMonth) {

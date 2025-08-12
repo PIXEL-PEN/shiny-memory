@@ -110,6 +110,33 @@ public class MainActivity extends MarkorBaseActivity implements GsFileBrowserFra
         setSupportActionBar(findViewById(R.id.toolbar));
         optShowRate();
 
+        androidx.appcompat.widget.Toolbar tb = findViewById(R.id.toolbar);
+        if (tb != null) {
+            tb.setOnClickListener(v -> {});     // eat stray taps on the bar background
+            tb.setLongClickable(false);
+            tb.setHapticFeedbackEnabled(false);
+        }
+
+
+
+        // --- click guard: prevent whole-toolbar taps from triggering global search ---
+        final androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.toolbar);
+        if (toolbar != null) {
+            // Swallow empty-area toolbar clicks but keep menu items working
+            toolbar.setOnClickListener(v -> {
+                // no-op: intentionally ignore generic toolbar clicks
+            });
+        }
+
+        final com.google.android.material.appbar.AppBarLayout appBar = findViewById(R.id.appbar);
+        if (appBar != null) {
+            appBar.setOnClickListener(v -> {
+                // no-op: ignore taps on the app bar background
+            });
+        }
+// --- end click guard ---
+
+
         // Setup viewpager
         _viewPager.setAdapter(new SectionsPagerAdapter(getSupportFragmentManager()));
         _viewPager.setOffscreenPageLimit(4);

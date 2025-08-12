@@ -48,14 +48,17 @@
 
             <ImageButton
                 android:id="@+id/btn_browser"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_folder_gray_24dp"
+                android:layout_width="63dp"
+                android:layout_height="63dp"
+                android:src="@drawable/ic_folder_outline_black_24dp"
+                android:scaleType="centerInside"
+                android:background="?android:selectableItemBackgroundBorderless"
                 android:contentDescription="Browse"
-
-                android:background="?android:selectableItemBackground"
                 android:layout_marginEnd="4dp"
                 android:layout_gravity="center_vertical" />
+
+
+
         </LinearLayout>
 
         <!-- Button + Spinner row -->
@@ -67,6 +70,7 @@
             android:gravity="center_vertical"
             android:weightSum="100">
 
+            <!-- Reset (compact) -->
             <Button
                 android:id="@+id/btn_reset"
                 android:layout_width="0dp"
@@ -75,9 +79,16 @@
                 android:text="Reset"
                 android:textAllCaps="false"
                 android:textSize="14sp"
-                android:minHeight="36dp"
-                android:layout_marginEnd="2dp" />
+                android:textColor="#FFFFFF"
+                android:includeFontPadding="false"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="6dp"
+                android:layout_marginEnd="2dp"
+                android:background="@drawable/btn_reset_style" />
 
+            <!-- Submit (compact) -->
             <Button
                 android:id="@+id/btn_submit"
                 android:layout_width="0dp"
@@ -86,9 +97,16 @@
                 android:text="Submit"
                 android:textAllCaps="false"
                 android:textSize="14sp"
-                android:minHeight="36dp"
+                android:textColor="#FFFFFF"
+                android:includeFontPadding="false"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="6dp"
                 android:layout_marginStart="2dp"
-                android:layout_marginEnd="2dp" />
+                android:layout_marginEnd="2dp"
+                android:background="@drawable/btn_submit_style" />
+
 
             <Spinner
                 android:id="@+id/spinner_category"
@@ -111,7 +129,9 @@
             android:maxLength="250"
             android:maxLines="10"
             android:gravity="top|start"
-            android:background="@android:drawable/edit_text"
+            android:background="@drawable/bg_edittext_amber"
+
+
             android:padding="8dp"
             android:scrollbars="vertical"
             android:overScrollMode="always"

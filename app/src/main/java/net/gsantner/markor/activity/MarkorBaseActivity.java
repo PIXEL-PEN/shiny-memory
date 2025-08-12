@@ -61,4 +61,19 @@ public abstract class MarkorBaseActivity extends GsActivityBase<AppSettings, Mar
     public Boolean isFlagSecure() {
         return _appSettings.isDisallowScreenshots();
     }
+
+    @Override
+    public boolean onSearchRequested() {
+        return false; // never auto-launch search UI
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_SEARCH) {
+            return true; // eat hardware SEARCH key
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+
 }
