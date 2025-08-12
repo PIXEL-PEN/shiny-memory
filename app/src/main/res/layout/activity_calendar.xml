@@ -9,10 +9,49 @@
     android:background="@android:color/white"
     tools:context=".activity.CalendarActivity">
 
-    <!-- Top toolbar -->
-    <include layout="@layout/include_markor_toolbar" />
+    <!-- Static header row for Calendar -->
+    <LinearLayout
+        android:id="@+id/header_row"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:background="@android:color/black"
+        android:gravity="center_vertical"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:orientation="horizontal">
 
-    <!-- Content wrapper (gives padding to content, not toolbar) -->
+        <LinearLayout
+            android:id="@+id/header_click_target"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            android:paddingEnd="8dp">
+
+            <ImageButton
+                android:id="@+id/btn_back"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="@string/back"
+                android:src="@drawable/ic_arrow_back_white_24dp" />
+
+            <TextView
+                android:id="@+id/title_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="› Calendar"
+                android:textColor="@android:color/white"
+                android:textSize="23sp"
+                android:textStyle="bold"
+                android:paddingStart="4dp"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Content wrapper (padding for everything below header) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -26,22 +65,20 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:background="#F2F2F2"> <!-- Light gray, slightly darker -->
+            android:background="#F2F2F2">
 
             <CalendarView
                 android:id="@+id/calendarView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
+            <!-- Bottom divider under the calendar -->
             <View
                 android:layout_width="match_parent"
                 android:layout_height=".9dp"
                 android:layout_gravity="bottom"
-                android:background="#222222" /> <!-- Near black -->
+                android:background="#222222" />
         </FrameLayout>
-
-
-
 
         <!-- Browser icon row -->
         <LinearLayout
@@ -62,9 +99,6 @@
                 android:contentDescription="Browse"
                 android:layout_marginEnd="4dp"
                 android:layout_gravity="center_vertical" />
-
-
-
         </LinearLayout>
 
         <!-- Button + Spinner row -->
@@ -113,7 +147,6 @@
                 android:layout_marginEnd="2dp"
                 android:background="@drawable/btn_submit_style" />
 
-
             <Spinner
                 android:id="@+id/spinner_category"
                 android:layout_width="0dp"
@@ -123,7 +156,7 @@
                 android:layout_marginEnd="2dp" />
         </LinearLayout>
 
-        <!-- Input Field with fixed height and scroll -->
+        <!-- Input Field -->
         <EditText
             android:id="@+id/input_note_title"
             android:layout_width="match_parent"
@@ -136,12 +169,9 @@
             android:maxLines="10"
             android:gravity="top|start"
             android:background="@drawable/bg_edittext_amber"
-
-
             android:padding="8dp"
             android:scrollbars="vertical"
             android:overScrollMode="always"
             android:scrollHorizontally="false" />
-
     </LinearLayout>
 </LinearLayout>

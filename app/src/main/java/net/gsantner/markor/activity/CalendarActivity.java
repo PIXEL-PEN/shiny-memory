@@ -12,6 +12,7 @@ import android.widget.CalendarView;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.core.content.FileProvider;
@@ -47,19 +48,24 @@ public class CalendarActivity extends Activity {
         btnBrowser = findViewById(R.id.btn_browser);
         calendarView = findViewById(R.id.calendarView);
 
-        // Neutralize background taps on the included Markor toolbar (do NOT wire as action bar)
+        // CURRENT LAYOUT: Neutralize taps on the included Markor toolbar (not used as ActionBar)
         View tb = findViewById(R.id.toolbar);
         if (tb != null) tb.setOnClickListener(v -> { /* no-op */ });
-
         View appbar = findViewById(R.id.appbar);
         if (appbar != null) appbar.setOnClickListener(v -> { /* no-op */ });
 
+        // FUTURE LAYOUT (static header): wire arrow+label as a single big back target.
+        // Safe to call even if those views don't exist yet (null checks).
+        View headerTap = findViewById(R.id.header_click_target);
+        if (headerTap != null) headerTap.setOnClickListener(v -> handleBackFromCalendar());
+        ImageButton backBtnHeader = findViewById(R.id.btn_back);
+        if (backBtnHeader != null) backBtnHeader.setOnClickListener(v -> handleBackFromCalendar());
+        TextView title = findViewById(R.id.title_text);
+        if (title != null) title.setText("› Calendar");
 
         // Spinner setup
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
-                this,
-                R.array.category_list,
-                R.layout.spinner_item
+                this, R.array.category_list, R.layout.spinner_item
         );
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerCategory.setAdapter(adapter);
@@ -82,14 +88,11 @@ public class CalendarActivity extends Activity {
         });
 
         // Submit button
-        btnSubmit.setOnClickListener(v -> {
-            createNoteFileAndSeedContent();  // Restores Submit functionality
-        });
+        btnSubmit.setOnClickListener(v -> createNoteFileAndSeedContent());
 
         // Browser button opens folder tree with selected values
         btnBrowser.setOnClickListener(v -> {
             String selectedCategory = spinnerCategory.getSelectedItem().toString();
-
             // Get selected month as "MM_MMMM" (e.g. "08_August")
             SimpleDateFormat monthFormat = new SimpleDateFormat("MM_MMMM", Locale.getDefault());
             String selectedMonth = monthFormat.format(selectedCalendarDate.getTime());
@@ -99,6 +102,27 @@ public class CalendarActivity extends Activity {
             intent.putExtra("selectedMonth", selectedMonth);
             startActivity(intent);
         });
+    }
+
+    // Smart back:
+    // - If Calendar sits on a back stack (opened from inside Markor), finish().
+    // - If it's task root (e.g., launched fresh), go to MainActivity.
+    private void handleBackFromCalendar() {
+        if (!isTaskRoot()) {
+            finish();
+            return;
+        }
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        // If MainActivity supports tab hints, pass one here (harmless if ignored):
+        intent.putExtra("open_tab", "files");
+        startActivity(intent);
+        finish();
+    }
+
+    @Override
+    public void onBackPressed() {
+        handleBackFromCalendar();
     }
 
     private void createNoteFileAndSeedContent() {
