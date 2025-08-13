@@ -49,13 +49,7 @@ public class CalendarActivity extends AppCompatActivity {
         btnBrowser = findViewById(R.id.btn_browser);
         calendarView = findViewById(R.id.calendarView);
 
-        // CURRENT LAYOUT: Neutralize taps on the included Markor toolbar (not used as ActionBar)
-        View tb = findViewById(R.id.toolbar);
-        if (tb != null) tb.setOnClickListener(v -> { /* no-op */ });
-        View appbar = findViewById(R.id.appbar);
-        if (appbar != null) appbar.setOnClickListener(v -> { /* no-op */ });
-
-        // FUTURE LAYOUT (static header): wire arrow+label as a single big back target.
+        // Header/back wiring (static header)
         View headerTap = findViewById(R.id.header_click_target);
         if (headerTap != null) headerTap.setOnClickListener(v -> handleBackFromCalendar());
         ImageButton backBtnHeader = findViewById(R.id.btn_back);
@@ -63,26 +57,26 @@ public class CalendarActivity extends AppCompatActivity {
         TextView title = findViewById(R.id.title_text);
         if (title != null) title.setText("› Calendar");
 
-        // Spinner setup
+        // NEW: Gear button in the top header opens Category Editor
+        ImageButton gear = findViewById(R.id.btn_manage_categories_toolbar);
+        if (gear != null) {
+            gear.setOnClickListener(v -> openManageCategoriesDialog());
+        }
+
+        // Spinner setup — keep it pure and stable (no FS scan here)
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
                 this, R.array.category_list, R.layout.spinner_item
         );
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerCategory.setAdapter(adapter);
-        spinnerCategory.setSelection(0); // Default to "General"
+        spinnerCategory.setSelection(0); // Default to first entry
 
-        // === NEW: Long-press entry points for Category Editor (no menu XML needed) ===
-        spinnerCategory.setOnLongClickListener(v -> {
-            openManageCategoriesDialog();
-            Toast.makeText(this, "Manage categories…", Toast.LENGTH_SHORT).show();
-            return true;
-        });
+        // Optional: long-press Browser button as a hidden shortcut to the Category Editor
         btnBrowser.setOnLongClickListener(v -> {
             openManageCategoriesDialog();
             Toast.makeText(this, "Manage categories…", Toast.LENGTH_SHORT).show();
             return true;
         });
-        // ============================================================================
 
         // Calendar listener
         calendarView.setOnDateChangeListener((view, year, month, dayOfMonth) -> {
@@ -177,7 +171,7 @@ public class CalendarActivity extends AppCompatActivity {
             return;
         }
 
-        // --- Persist true creation time in the index (epoch millis) ---
+        // Persist true creation time in the index (epoch millis)
         long createdMillis = calendar.getTimeInMillis();
         CreationIndex cidx = new CreationIndex(this);
         cidx.put(noteFile, createdMillis);
