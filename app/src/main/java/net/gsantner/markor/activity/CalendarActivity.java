@@ -1,47 +1,67 @@
 package net.gsantner.markor.activity;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CalendarView;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.PopupMenu;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.core.content.FileProvider;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
 
 import net.gsantner.markor.R;
 import net.gsantner.markor.model.CreationIndex;
+import net.gsantner.markor.util.CategoryManager;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
-public class CalendarActivity extends AppCompatActivity {
+public class CalendarActivity extends AppCompatActivity
+        implements ManageCategoriesDialogFragment.CategoryChangeSink {
+
+    private static final String DEFAULT_CATEGORY = "General";
+
+    // Prefs keys for our UI-controlled list
+    private static final String PREFS_NAME = "category_ui_prefs";
+    private static final String KEY_UI_LIST = "ui_category_list";       // StringSet
+    private static final String KEY_PREFER_UI = "prefer_ui_list";       // boolean
 
     private EditText inputNoteTitle;
     private Button btnReset, btnSubmit;
     private Spinner spinnerCategory;
     private ImageButton btnBrowser;
     private CalendarView calendarView;
-    private Calendar selectedCalendarDate = Calendar.getInstance(); // Default to today
+    private final Calendar selectedCalendarDate = Calendar.getInstance();
+
+    private ArrayAdapter<String> categoryAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calendar);
 
-        // Initialize views
+        // Views
         inputNoteTitle = findViewById(R.id.input_note_title);
         btnReset = findViewById(R.id.btn_reset);
         btnSubmit = findViewById(R.id.btn_submit);
@@ -49,7 +69,7 @@ public class CalendarActivity extends AppCompatActivity {
         btnBrowser = findViewById(R.id.btn_browser);
         calendarView = findViewById(R.id.calendarView);
 
-        // Header/back wiring (static header)
+        // Header/back
         View headerTap = findViewById(R.id.header_click_target);
         if (headerTap != null) headerTap.setOnClickListener(v -> handleBackFromCalendar());
         ImageButton backBtnHeader = findViewById(R.id.btn_back);
@@ -57,50 +77,53 @@ public class CalendarActivity extends AppCompatActivity {
         TextView title = findViewById(R.id.title_text);
         if (title != null) title.setText("› Calendar");
 
-        // NEW: Gear button in the top header opens Category Editor
+        // Gear (manage categories)
         ImageButton gear = findViewById(R.id.btn_manage_categories_toolbar);
         if (gear != null) {
+            // Single tap → open category editor
             gear.setOnClickListener(v -> openManageCategoriesDialog());
+            // Long press → popup maintenance tools
+            gear.setOnLongClickListener(v -> {
+                showCategoryToolsPopup(v);
+                return true;
+            });
         }
 
-        // Spinner setup — keep it pure and stable (no FS scan here)
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
-                this, R.array.category_list, R.layout.spinner_item
-        );
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerCategory.setAdapter(adapter);
-        spinnerCategory.setSelection(0); // Default to first entry
+        // Initial bind: prefer UI list if present, else fallback
+        bindCategories(/*keepSelection=*/false);
 
-        // Optional: long-press Browser button as a hidden shortcut to the Category Editor
+        // Hidden shortcut: long-press folder button to open editor
         btnBrowser.setOnLongClickListener(v -> {
             openManageCategoriesDialog();
             Toast.makeText(this, "Manage categories…", Toast.LENGTH_SHORT).show();
             return true;
         });
 
-        // Calendar listener
+        // Calendar date change
         calendarView.setOnDateChangeListener((view, year, month, dayOfMonth) -> {
             selectedCalendarDate.set(Calendar.YEAR, year);
             selectedCalendarDate.set(Calendar.MONTH, month);
             selectedCalendarDate.set(Calendar.DAY_OF_MONTH, dayOfMonth);
         });
 
-        // Reset button
+        // Reset
         btnReset.setOnClickListener(v -> {
             inputNoteTitle.setText("");
-            spinnerCategory.setSelection(0);
+            // Default to "General" (or first item if missing)
+            List<String> cats = loadCategoriesForSpinner();
+            int idxDefault = indexOfIgnoreCase(cats, DEFAULT_CATEGORY);
+            spinnerCategory.setSelection(idxDefault >= 0 ? idxDefault : 0);
             calendarView.setDate(System.currentTimeMillis(), false, true);
             selectedCalendarDate.setTimeInMillis(System.currentTimeMillis());
             Toast.makeText(CalendarActivity.this, "Reset", Toast.LENGTH_SHORT).show();
         });
 
-        // Submit button
+        // Submit
         btnSubmit.setOnClickListener(v -> createNoteFileAndSeedContent());
 
-        // Browser button opens folder tree with selected values (short press)
+        // Open folder browser
         btnBrowser.setOnClickListener(v -> {
             String selectedCategory = spinnerCategory.getSelectedItem().toString();
-            // Get selected month as "MM_MMMM" (e.g. "08_August")
             SimpleDateFormat monthFormat = new SimpleDateFormat("MM_MMMM", Locale.getDefault());
             String selectedMonth = monthFormat.format(selectedCalendarDate.getTime());
 
@@ -111,9 +134,121 @@ public class CalendarActivity extends AppCompatActivity {
         });
     }
 
-    // Smart back:
-    // - If Calendar sits on a back stack (opened from inside Markor), finish().
-    // - If it's task root (e.g., launched fresh), go to MainActivity.
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Keep the user's selection on refresh
+        bindCategories(true);
+    }
+
+    // ===== Category tools popup (long-press gear) =====
+    private void showCategoryToolsPopup(View anchor) {
+        PopupMenu pm = new PopupMenu(this, anchor);
+        pm.getMenu().add(0, 1, 0, "Clear categories (UI only)");
+        pm.getMenu().add(0, 2, 1, "Rebuild from folders");
+        pm.getMenu().add(0, 3, 2, "Reset to defaults");
+        pm.setOnMenuItemClickListener(this::onCategoryToolsMenuItem);
+        pm.show();
+    }
+
+    private boolean onCategoryToolsMenuItem(MenuItem item) {
+        switch (item.getItemId()) {
+            case 1: // Clear categories (UI only)
+                confirmAndRun("Clear all categories from spinner?", () -> {
+                    saveUiCategoryList(new ArrayList<>()); // persist empty list
+                    setPreferUi(true);
+                    bindCategories(false);
+                    Toast.makeText(this, "Spinner list cleared.", Toast.LENGTH_SHORT).show();
+                });
+                return true;
+            case 2: // Rebuild from folders
+                confirmAndRun("Rebuild categories from folders?", () -> {
+                    clearUiCategoryList();   // remove override
+                    setPreferUi(false);
+                    bindCategories(false);
+                    Toast.makeText(this, "Rebuilt from folders.", Toast.LENGTH_SHORT).show();
+                });
+                return true;
+            case 3: // Reset to defaults
+                confirmAndRun("Reset categories to defaults?", () -> {
+                    List<String> def = new ArrayList<>(Arrays.asList(getResources().getStringArray(R.array.category_list)));
+                    saveUiCategoryList(def);
+                    setPreferUi(true);
+                    bindCategories(false);
+                    Toast.makeText(this, "Categories reset to defaults.", Toast.LENGTH_SHORT).show();
+                });
+                return true;
+        }
+        return false;
+    }
+
+    private void confirmAndRun(String message, Runnable action) {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setMessage(message)
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton(android.R.string.ok, (d, w) -> action.run())
+                .show();
+    }
+
+    // ===== Dialog -> Activity callbacks =====
+    @Override
+    public void onCategoryRemoved(String name) {
+        // Remove from current UI list and persist the new list (UI authoritative)
+        removeCategoryFromSpinnerImmediate(name);
+        persistCurrentSpinnerList();
+        setPreferUi(true); // keep using UI list
+    }
+
+    @Override
+    public void onCategoriesChanged() {
+        // Rebind from CategoryManager, then snapshot to UI list so spinner stays stable
+        bindCategories(true);
+        persistCurrentSpinnerList();
+        setPreferUi(true);
+    }
+
+    // Remove a deleted category from the spinner immediately (no full rebind needed)
+    @SuppressWarnings("unchecked")
+    private void removeCategoryFromSpinnerImmediate(String name) {
+        if (spinnerCategory == null || spinnerCategory.getAdapter() == null) {
+            bindCategories(true);
+            return;
+        }
+        ArrayAdapter<String> ad;
+        try {
+            ad = (ArrayAdapter<String>) spinnerCategory.getAdapter();
+        } catch (ClassCastException e) {
+            bindCategories(true);
+            return;
+        }
+
+        int idxToRemove = -1;
+        for (int i = 0; i < ad.getCount(); i++) {
+            String item = ad.getItem(i);
+            if (item != null && item.equalsIgnoreCase(name)) {
+                idxToRemove = i;
+                break;
+            }
+        }
+        if (idxToRemove >= 0) {
+            int current = spinnerCategory.getSelectedItemPosition();
+            ad.remove(ad.getItem(idxToRemove));
+            ad.notifyDataSetChanged();
+
+            if (current == idxToRemove) {
+                int newCount = ad.getCount();
+                if (newCount > 0) {
+                    int idxGeneral = -1;
+                    for (int i = 0; i < newCount; i++) {
+                        String s = ad.getItem(i);
+                        if (DEFAULT_CATEGORY.equalsIgnoreCase(s)) { idxGeneral = i; break; }
+                    }
+                    spinnerCategory.setSelection(idxGeneral >= 0 ? idxGeneral : 0, false);
+                }
+            }
+        }
+    }
+
     private void handleBackFromCalendar() {
         if (!isTaskRoot()) {
             finish();
@@ -121,7 +256,7 @@ public class CalendarActivity extends AppCompatActivity {
         }
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        intent.putExtra("open_tab", "files"); // harmless hint
+        intent.putExtra("open_tab", "files");
         startActivity(intent);
         finish();
     }
@@ -136,6 +271,83 @@ public class CalendarActivity extends AppCompatActivity {
                 .show(getSupportFragmentManager(), "manage_categories");
     }
 
+    // ===== Binding & data sources =====
+
+    /**
+     * Decide which source to use:
+     * - If user has a UI list and prefers it → use it exactly (authoritative)
+     * - Else → use CategoryManager (filesystem+prefs), falling back to defaults
+     */
+    private List<String> loadCategoriesForSpinner() {
+        if (preferUi()) {
+            List<String> ui = getUiCategoryList();
+            if (ui != null) return ui;
+        }
+
+        List<String> list = new ArrayList<>();
+        try {
+            CategoryManager.Result r = CategoryManager.listCategories(this);
+            if (r != null && r.changedPaths != null && !r.changedPaths.isEmpty()) {
+                list.addAll(r.changedPaths);
+            }
+        } catch (Exception ignored) { }
+
+        if (list.isEmpty()) {
+            String[] fallback = getResources().getStringArray(R.array.category_list);
+            Collections.addAll(list, fallback);
+        }
+
+        try { Collections.sort(list, String.CASE_INSENSITIVE_ORDER); } catch (Throwable ignored) { }
+        return list;
+    }
+
+    private void bindCategories(boolean keepSelection) {
+        String previous = null;
+        if (keepSelection && spinnerCategory.getAdapter() != null) {
+            Object cur = spinnerCategory.getSelectedItem();
+            previous = (cur == null) ? null : cur.toString();
+        }
+
+        List<String> cats = loadCategoriesForSpinner();
+
+        if (categoryAdapter == null) {
+            categoryAdapter = new ArrayAdapter<>(this, R.layout.spinner_item, cats);
+            categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            spinnerCategory.setAdapter(categoryAdapter);
+        } else {
+            categoryAdapter.clear();
+            categoryAdapter.addAll(cats);
+            categoryAdapter.notifyDataSetChanged();
+        }
+
+        if (keepSelection) {
+            if (previous != null) {
+                int idxPrev = indexOfIgnoreCase(cats, previous);
+                if (idxPrev >= 0) {
+                    spinnerCategory.setSelection(idxPrev, false);
+                    return;
+                }
+            }
+            // fall through to default if we couldn't keep selection
+        }
+
+        int idxDefault = indexOfIgnoreCase(cats, DEFAULT_CATEGORY);
+        if (idxDefault >= 0) {
+            spinnerCategory.setSelection(idxDefault, false);
+        } else if (!cats.isEmpty()) {
+            spinnerCategory.setSelection(0, false);
+        }
+    }
+
+    private static int indexOfIgnoreCase(List<String> list, String target) {
+        if (target == null) return -1;
+        for (int i = 0; i < list.size(); i++) {
+            String s = list.get(i);
+            if (s != null && s.equalsIgnoreCase(target)) return i;
+        }
+        return -1;
+    }
+
     private void createNoteFileAndSeedContent() {
         String title = inputNoteTitle.getText().toString().trim();
         if (title.isEmpty()) {
@@ -145,7 +357,6 @@ public class CalendarActivity extends AppCompatActivity {
 
         String category = spinnerCategory.getSelectedItem().toString();
 
-        // Use the selected date
         Calendar calendar = selectedCalendarDate;
         SimpleDateFormat yearFormat = new SimpleDateFormat("yyyy", Locale.getDefault());
         SimpleDateFormat monthFormat = new SimpleDateFormat("MM_MMMM", Locale.getDefault());
@@ -171,17 +382,15 @@ public class CalendarActivity extends AppCompatActivity {
             return;
         }
 
-        // Persist true creation time in the index (epoch millis)
         long createdMillis = calendar.getTimeInMillis();
         CreationIndex cidx = new CreationIndex(this);
         cidx.put(noteFile, createdMillis);
         cidx.save();
 
         try (FileWriter writer = new FileWriter(noteFile)) {
-            writer.write(timestamp + "\n\n"); // human-readable first line
+            writer.write(timestamp + "\n\n");
             Toast.makeText(this, "Note created: " + noteFile.getName(), Toast.LENGTH_SHORT).show();
 
-            // Open in Markor via FileProvider
             Uri uri = FileProvider.getUriForFile(this, getPackageName() + ".provider", noteFile);
             Intent intent = new Intent(Intent.ACTION_EDIT);
             intent.setDataAndType(uri, "text/markdown");
@@ -199,5 +408,45 @@ public class CalendarActivity extends AppCompatActivity {
             e.printStackTrace();
             Toast.makeText(this, "Failed to create note.", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    // ===== UI list persistence (authoritative) =====
+    private SharedPreferences prefs() {
+        return getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+    }
+
+    private boolean preferUi() {
+        return prefs().getBoolean(KEY_PREFER_UI, false);
+    }
+
+    private void setPreferUi(boolean prefer) {
+        prefs().edit().putBoolean(KEY_PREFER_UI, prefer).apply();
+    }
+
+    private void saveUiCategoryList(List<String> list) {
+        Set<String> set = new HashSet<>(list);
+        prefs().edit().putStringSet(KEY_UI_LIST, set).apply();
+    }
+
+    private void clearUiCategoryList() {
+        prefs().edit().remove(KEY_UI_LIST).apply();
+    }
+
+    private List<String> getUiCategoryList() {
+        Set<String> set = prefs().getStringSet(KEY_UI_LIST, null);
+        if (set == null) return null;
+        List<String> list = new ArrayList<>(set);
+        try { Collections.sort(list, String.CASE_INSENSITIVE_ORDER); } catch (Throwable ignored) { }
+        return list;
+    }
+
+    private void persistCurrentSpinnerList() {
+        if (categoryAdapter == null) return;
+        List<String> cur = new ArrayList<>();
+        for (int i = 0; i < categoryAdapter.getCount(); i++) {
+            String s = categoryAdapter.getItem(i);
+            if (s != null) cur.add(s);
+        }
+        saveUiCategoryList(cur);
     }
 }
