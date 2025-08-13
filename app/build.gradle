@@ -44,21 +44,27 @@ android {
     productFlavors {
         flavorAtest {
             applicationId "net.gsantner.markor_test"
-            versionCode = Integer.parseInt(new Date().format('yyMMdd'))
-            versionName = defaultConfig.versionName + "-" + new Date().format('HHmm')
+            versionCode Integer.parseInt(new Date().format('yyMMdd'))
+            versionName defaultConfig.versionName + "-" + new Date().format('HHmm')
             buildConfigField "boolean", "IS_TEST_BUILD", "true"
         }
         flavorDefault {
-            applicationId "net.gsantner.markor_default"   // distinct ID so it installs alongside others
-            versionCode = Integer.parseInt(new Date().format('yyMMdd'))
-            versionName = defaultConfig.versionName + "-" + new Date().format('HHmm')
+            applicationId "net.gsantner.markor_plus"   // ✅ new package ID
+            versionCode Integer.parseInt(new Date().format('yyMMdd'))
+            versionName defaultConfig.versionName + "-" + new Date().format('HHmm')
             buildConfigField "boolean", "IS_TEST_BUILD", "true"
-            resValue "string", "app_name", "Markor DEFAULT"   // 👈 NEW: change app name on launcher
+            resValue "string", "app_name", "Markor Plus"   // ✅ new launcher name
         }
-
         flavorGplay {
             buildConfigField "boolean", "IS_GPLAY_BUILD", "true"
         }
+    }
+
+    lintOptions {
+        abortOnError false
+        disable 'MissingTranslation', 'InvalidPackage', 'ObsoleteLintCustomCheck', 'DefaultLocale',
+                'UnusedAttribute', 'VectorRaster', 'InflateParams', 'IconLocation',
+                'UnusedResources', 'TypographyEllipsis'
     }
 
     sourceSets {
@@ -77,24 +83,20 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
     packagingOptions {
         resources {
             excludes += ['META-INF/LICENSE-LGPL-2.1.txt', 'META-INF/LICENSE-LGPL-3.txt', 'META-INF/LICENSE-W3C-TEST']
         }
     }
 
-
     compileOptions {
         encoding = 'UTF-8'
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    namespace 'net.gsantner.markor'
-    lint {
-        abortOnError false
-        disable 'MissingTranslation', 'InvalidPackage', 'ObsoleteLintCustomCheck', 'DefaultLocale', 'UnusedAttribute', 'VectorRaster', 'InflateParams', 'IconLocation', 'UnusedResources', 'TypographyEllipsis'
-    }
 
+    namespace 'net.gsantner.markor'
 }
 
 dependencies {
@@ -137,11 +139,9 @@ dependencies {
     // opencsv 5.7.1' for java-8 may have dependencies that are not backward compatibility with android-4.1
     //noinspection GradleDependency
     implementation('com.opencsv:opencsv:3.10') {
-        // do not get transitive 'commons-beanutils:commons-beanutils as the opencsv bean <-> csv feature is not used
+        // do not get transitive 'commons-beanutils:commons-beanutils' as it's unused
         exclude group: 'commons-beanutils', module: 'commons-beanutils'
     }
-
-
 
     // UI libs
     implementation 'com.github.Pixplicity:gene-rate:v1.1.8'
