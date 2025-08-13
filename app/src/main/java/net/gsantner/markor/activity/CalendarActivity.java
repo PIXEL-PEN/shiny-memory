@@ -1,6 +1,5 @@
 package net.gsantner.markor.activity;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -16,8 +15,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.core.content.FileProvider;
+import androidx.appcompat.app.AppCompatActivity;
 
 import net.gsantner.markor.R;
+import net.gsantner.markor.model.CreationIndex;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -26,10 +27,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
 
-import net.gsantner.markor.model.CreationIndex;
-
-
-public class CalendarActivity extends Activity {
+public class CalendarActivity extends AppCompatActivity {
 
     private EditText inputNoteTitle;
     private Button btnReset, btnSubmit;
@@ -58,7 +56,6 @@ public class CalendarActivity extends Activity {
         if (appbar != null) appbar.setOnClickListener(v -> { /* no-op */ });
 
         // FUTURE LAYOUT (static header): wire arrow+label as a single big back target.
-        // Safe to call even if those views don't exist yet (null checks).
         View headerTap = findViewById(R.id.header_click_target);
         if (headerTap != null) headerTap.setOnClickListener(v -> handleBackFromCalendar());
         ImageButton backBtnHeader = findViewById(R.id.btn_back);
@@ -73,6 +70,19 @@ public class CalendarActivity extends Activity {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerCategory.setAdapter(adapter);
         spinnerCategory.setSelection(0); // Default to "General"
+
+        // === NEW: Long-press entry points for Category Editor (no menu XML needed) ===
+        spinnerCategory.setOnLongClickListener(v -> {
+            openManageCategoriesDialog();
+            Toast.makeText(this, "Manage categories…", Toast.LENGTH_SHORT).show();
+            return true;
+        });
+        btnBrowser.setOnLongClickListener(v -> {
+            openManageCategoriesDialog();
+            Toast.makeText(this, "Manage categories…", Toast.LENGTH_SHORT).show();
+            return true;
+        });
+        // ============================================================================
 
         // Calendar listener
         calendarView.setOnDateChangeListener((view, year, month, dayOfMonth) -> {
@@ -93,7 +103,7 @@ public class CalendarActivity extends Activity {
         // Submit button
         btnSubmit.setOnClickListener(v -> createNoteFileAndSeedContent());
 
-        // Browser button opens folder tree with selected values
+        // Browser button opens folder tree with selected values (short press)
         btnBrowser.setOnClickListener(v -> {
             String selectedCategory = spinnerCategory.getSelectedItem().toString();
             // Get selected month as "MM_MMMM" (e.g. "08_August")
@@ -117,8 +127,7 @@ public class CalendarActivity extends Activity {
         }
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        // If MainActivity supports tab hints, pass one here (harmless if ignored):
-        intent.putExtra("open_tab", "files");
+        intent.putExtra("open_tab", "files"); // harmless hint
         startActivity(intent);
         finish();
     }
@@ -126,6 +135,11 @@ public class CalendarActivity extends Activity {
     @Override
     public void onBackPressed() {
         handleBackFromCalendar();
+    }
+
+    private void openManageCategoriesDialog() {
+        ManageCategoriesDialogFragment.newInstance()
+                .show(getSupportFragmentManager(), "manage_categories");
     }
 
     private void createNoteFileAndSeedContent() {
@@ -163,16 +177,14 @@ public class CalendarActivity extends Activity {
             return;
         }
 
-        // --- NEW: persist true creation time in the index (epoch millis) ---
+        // --- Persist true creation time in the index (epoch millis) ---
         long createdMillis = calendar.getTimeInMillis();
         CreationIndex cidx = new CreationIndex(this);
         cidx.put(noteFile, createdMillis);
         cidx.save();
-        // -------------------------------------------------------------------
 
         try (FileWriter writer = new FileWriter(noteFile)) {
-            // Keep your existing human-readable first line exactly as-is
-            writer.write(timestamp + "\n\n");
+            writer.write(timestamp + "\n\n"); // human-readable first line
             Toast.makeText(this, "Note created: " + noteFile.getName(), Toast.LENGTH_SHORT).show();
 
             // Open in Markor via FileProvider
@@ -194,5 +206,4 @@ public class CalendarActivity extends Activity {
             Toast.makeText(this, "Failed to create note.", Toast.LENGTH_SHORT).show();
         }
     }
-
 }

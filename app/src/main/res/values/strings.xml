@@ -488,6 +488,24 @@ work. If not, see <https://creativecommons.org/publicdomain/zero/1.0/>.
     <string name="folder_local">Folder local</string>
     <string name="fab_open_calendar">Open Calendar</string>
 
+    <string name="manage_categories">Manage categories</string>
+    <string name="preview">Preview</string>
+    <string name="confirm">Confirm</string>
+    <string name="action">Action</string>
+    <string name="from">From</string>
+    <string name="target">Target</string>
+    <string name="new_name">New name</string>
+    <string name="new_name_hint">Enter new category name</string>
+    <string name="force_move_uncategorized">Force delete: move files to “Uncategorized”</string>
+    <string name="undo_will_revert_last_op">Will undo the last category operation.</string>
+    <string name="invalid_action">Invalid action</string>
+    <string name="items">Items</string>
+
+
+
+
+
+
     <string-array name="category_list">
         <item>General</item>
         <item>Projects</item>

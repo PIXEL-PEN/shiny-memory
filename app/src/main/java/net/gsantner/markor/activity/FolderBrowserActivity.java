@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.view.WindowManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -18,7 +20,10 @@ import net.gsantner.markor.model.FileNode;
 import net.gsantner.markor.model.FolderNode;
 import net.gsantner.markor.model.FolderTreeScanner;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -26,6 +31,10 @@ import java.util.Locale;
 public class FolderBrowserActivity extends Activity {
 
     private static final String TAG = "WebViewDebug";
+
+    // Long-title & content thresholds
+    private static final int TITLE_LEN_THRESHOLD = 120;           // chars (without .md)
+    private static final long SIZE_THRESHOLD_BYTES = 2L * 1024L;  // 2 KB tiny-size heuristic
 
     private WebView webView;
     private File rootFolder;
@@ -35,21 +44,21 @@ public class FolderBrowserActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_folder_browser);
 
+        // Keep IME hidden in this activity to reduce flash on outgoing launch
+        getWindow().setSoftInputMode(
+                WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN
+                        | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+        );
+
         // ---- Static header (no ActionBar) ----
         View headerTap = findViewById(R.id.header_click_target);
-        if (headerTap != null) {
-            headerTap.setOnClickListener(v -> finish());
-        }
+        if (headerTap != null) headerTap.setOnClickListener(v -> finish());
         ImageButton backBtn = findViewById(R.id.btn_back);
-        if (backBtn != null) {
-            backBtn.setOnClickListener(v -> finish());
-        }
+        if (backBtn != null) backBtn.setOnClickListener(v -> finish());
         TextView title = findViewById(R.id.title_text);
-        if (title != null) {
-            title.setText("› Browser Tree");
-        }
+        if (title != null) title.setText("› Browser Tree");
 
-        // ---- Creation index for true Date Created sorting ----
+        // ---- Date Created chronology: leave intact ----
         net.gsantner.markor.model.CreationIndex cidx = new net.gsantner.markor.model.CreationIndex(this);
         net.gsantner.markor.model.FolderTreeScanner.setCreationIndex(cidx);
 
@@ -58,6 +67,11 @@ public class FolderBrowserActivity extends Activity {
 
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
+
+        // Don’t let WebView grab focus (helps prevent IME popping)
+        webView.setFocusable(false);
+        webView.setFocusableInTouchMode(false);
+        webView.clearFocus();
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
@@ -95,9 +109,21 @@ public class FolderBrowserActivity extends Activity {
                 return false;
             }
 
-            // --- Hardened open: exact path first; fallback to best same-folder match ---
+            // Open: exact path first; fallback to best same-folder match
             private void openInMarkor(String filePath) {
                 try {
+                    // Hide keyboard + clear focus BEFORE launching to avoid flash
+                    try {
+                        View focused = getCurrentFocus();
+                        if (focused != null) focused.clearFocus();
+                        if (webView != null) webView.clearFocus();
+                        InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                        if (imm != null) {
+                            View anchor = (focused != null) ? focused : webView;
+                            if (anchor != null) imm.hideSoftInputFromWindow(anchor.getWindowToken(), 0);
+                        }
+                    } catch (Throwable ignored) {}
+
                     File requested = new File(filePath);
                     File target = requested.exists() ? requested : findBestMatch(requested);
 
@@ -105,7 +131,9 @@ public class FolderBrowserActivity extends Activity {
                         Intent intent = new Intent(FolderBrowserActivity.this, DocumentActivity.class);
                         intent.putExtra(Document.EXTRA_FILE, target);
                         intent.putExtra(Document.EXTRA_DO_PREVIEW, true);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                         startActivity(intent);
+                        overridePendingTransition(0, 0);
                     } else {
                         android.widget.Toast.makeText(
                                 FolderBrowserActivity.this,
@@ -123,7 +151,6 @@ public class FolderBrowserActivity extends Activity {
                 }
             }
 
-            // Try to resolve truncated / prettified titles to a real file in the same directory
             private File findBestMatch(File expectedPath) {
                 if (expectedPath == null) return null;
                 File dir = expectedPath.getParentFile();
@@ -150,7 +177,6 @@ public class FolderBrowserActivity extends Activity {
                         best = f;
                     }
                 }
-                // Only accept reasonably close matches
                 return (bestScore >= 800) ? best : null;
             }
 
@@ -158,7 +184,6 @@ public class FolderBrowserActivity extends Activity {
                 String n = name;
                 int dot = n.lastIndexOf('.');
                 if (dot > 0) n = n.substring(0, dot);
-                // collapse to alnum to make matching resilient to spaces/dashes/emoji
                 return n.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", "");
             }
         });
@@ -187,8 +212,10 @@ public class FolderBrowserActivity extends Activity {
                 .append(".folder.collapsed .arrow { transform: rotate(0deg); }")
                 .append(".folder.expanded .arrow { transform: rotate(90deg); }")
                 .append(".file { display: flex; align-items: flex-start; margin: 8px 0 0; font-size: 16px; gap: 10px; padding-bottom: 6px; border-bottom: 1px solid #ddd; }")
-                .append(".file .icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }")
-                .append(".note-title { font-size: 17px; font-weight: 500; }")
+                .append(".file .icon { width:16px; display:flex; align-items:center; justify-content:center; margin-top:1px; }")
+                .append(".flag-square { width:12px; height:12px; border-radius:3px; background:#d35400; }")
+                .append(".flag-square.hollow { background:transparent; border:2px solid #d35400; }")
+                .append(".note-title { font-size: 17px; font-weight: 500; margin-left:2px; }")
                 .append(".note-meta  { font-size: 12px; color: #6e6e6e; margin-left: 0; white-space: nowrap; display: block; }")
                 .append(".note-meta span.sep { padding: 0 2px; }")
                 .append(".year { font-size: 19px; font-weight: bold; }")
@@ -251,23 +278,62 @@ public class FolderBrowserActivity extends Activity {
         SimpleDateFormat sdfYr  = new SimpleDateFormat("yy",  Locale.getDefault());
 
         for (FileNode file : folder.files) {
-            Date t = new Date(file.file.lastModified()); // Display stays as modified (per your note)
+            Date t = new Date(file.file.lastModified());
             String dateStr = "<div class='note-meta'>"
                     + sdfWk.format(t) + "<span class='sep'>|</span>"
                     + sdfDay.format(t) + " " + sdfMon.format(t) + "<span class='sep'>|</span>"
                     + sdfYr.format(t)
                     + "</div>";
 
+            String baseName = file.name.replaceAll("\\.md$", "");
+            boolean isLongTitle = baseName.length() >= TITLE_LEN_THRESHOLD;
+
+            // Default icon
+            String iconHtml = "📄";
+
+            if (isLongTitle) {
+                boolean substantial =
+                        (file.file != null && file.file.length() >= SIZE_THRESHOLD_BYTES)
+                                || (file.file != null && hasAnyContentBeyondSeed(file.file));
+
+                // Hollow square for long-title; solid square if substantial content as well
+                iconHtml = substantial
+                        ? "<span class='flag-square' title='Long title & content present'></span>"
+                        : "<span class='flag-square hollow' title='Long title'></span>";
+            }
+
             sb.append("<div class='file' style='").append(fileIndent).append("'>")
-                    .append("<div class='icon'>📄</div>")
+                    .append("<div class='icon'>").append(iconHtml).append("</div>")
                     .append("<div>")
                     .append("<a href='note:").append(file.file.getAbsolutePath()).append("'>")
-                    .append("<span class='note-title'>").append(file.name.replaceAll("\\.md$", "")).append("</span>")
+                    .append("<span class='note-title'>").append(baseName).append("</span>")
                     .append("</a>")
                     .append(dateStr)
                     .append("</div>")
                     .append("</div>");
         }
         sb.append("</div>");
+    }
+
+    // --- Helper: true if there is ANY non-empty content beyond the first (seed) line ---
+    private boolean hasAnyContentBeyondSeed(File f) {
+        BufferedReader br = null;
+        try {
+            br = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
+            // skip first line (seeded datestamp)
+            br.readLine();
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (!line.trim().isEmpty()) {
+                    return true; // any real content beyond seed
+                }
+            }
+            return false;
+        } catch (Exception e) {
+            Log.w(TAG, "hasAnyContentBeyondSeed failed for " + f, e);
+            return false;
+        } finally {
+            try { if (br != null) br.close(); } catch (Exception ignore) {}
+        }
     }
 }
