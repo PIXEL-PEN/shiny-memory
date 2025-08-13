@@ -79,6 +79,7 @@ public class FolderBrowserActivity extends Activity {
             }
 
             @Override
+            @SuppressWarnings("deprecation")
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 Log.d(TAG, "Tapped URL (legacy): " + url);
                 if (url != null && url.startsWith("note:")) {
@@ -94,12 +95,15 @@ public class FolderBrowserActivity extends Activity {
                 return false;
             }
 
+            // --- Hardened open: exact path first; fallback to best same-folder match ---
             private void openInMarkor(String filePath) {
                 try {
-                    File file = new File(filePath);
-                    if (file.exists()) {
+                    File requested = new File(filePath);
+                    File target = requested.exists() ? requested : findBestMatch(requested);
+
+                    if (target != null && target.exists()) {
                         Intent intent = new Intent(FolderBrowserActivity.this, DocumentActivity.class);
-                        intent.putExtra(Document.EXTRA_FILE, file);
+                        intent.putExtra(Document.EXTRA_FILE, target);
                         intent.putExtra(Document.EXTRA_DO_PREVIEW, true);
                         startActivity(intent);
                     } else {
@@ -111,7 +115,51 @@ public class FolderBrowserActivity extends Activity {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
+                    android.widget.Toast.makeText(
+                            FolderBrowserActivity.this,
+                            "Unable to open file.",
+                            android.widget.Toast.LENGTH_SHORT
+                    ).show();
                 }
+            }
+
+            // Try to resolve truncated / prettified titles to a real file in the same directory
+            private File findBestMatch(File expectedPath) {
+                if (expectedPath == null) return null;
+                File dir = expectedPath.getParentFile();
+                if (dir == null || !dir.isDirectory()) return null;
+
+                String wanted = normalizeName(expectedPath.getName());
+                File best = null;
+                int bestScore = -1;
+
+                File[] list = dir.listFiles();
+                if (list == null) return null;
+
+                for (File f : list) {
+                    if (!f.isFile()) continue;
+                    String cand = normalizeName(f.getName());
+
+                    int score = 0;
+                    if (cand.equals(wanted)) score = 1000;
+                    else if (cand.startsWith(wanted) || wanted.startsWith(cand)) score = 900;
+                    else if (cand.contains(wanted) || wanted.contains(cand)) score = 800;
+
+                    if (score > bestScore) {
+                        bestScore = score;
+                        best = f;
+                    }
+                }
+                // Only accept reasonably close matches
+                return (bestScore >= 800) ? best : null;
+            }
+
+            private String normalizeName(String name) {
+                String n = name;
+                int dot = n.lastIndexOf('.');
+                if (dot > 0) n = n.substring(0, dot);
+                // collapse to alnum to make matching resilient to spaces/dashes/emoji
+                return n.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", "");
             }
         });
 
