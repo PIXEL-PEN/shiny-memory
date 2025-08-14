@@ -1,5 +1,7 @@
 package net.gsantner.markor.activity;
 
+
+
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -27,6 +29,8 @@ import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import net.gsantner.markor.util.StorageRoots;
+
 
 public class FolderBrowserActivity extends Activity {
 
@@ -191,10 +195,9 @@ public class FolderBrowserActivity extends Activity {
         String selectedCategory = getIntent().getStringExtra("selectedCategory");
         String selectedMonth = getIntent().getStringExtra("selectedMonth");
 
-        rootFolder = new File(
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS),
-                "markor default"
-        );
+        // Use canonical root for this build (no other changes)
+        rootFolder = StorageRoots.getWorkingRoot(this);
+
         FolderNode tree = FolderTreeScanner.scan(rootFolder, selectedCategory, selectedMonth);
 
         String html = buildHtml(tree, selectedCategory, selectedMonth);

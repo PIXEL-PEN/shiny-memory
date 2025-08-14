@@ -503,6 +503,15 @@ work. If not, see <https://creativecommons.org/publicdomain/zero/1.0/>.
 
 
 
+    <string name="default_root_label">Markor Plus</string>
+    <string name="app_name">Markor-Plus</string>
+    <string name="app_name_real" translatable="false">@string/app_name</string>
+
+
+
+
+
+
 
 
 

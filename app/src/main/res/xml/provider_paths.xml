@@ -1,17 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-/*#######################################################
- *
- *   Maintained 2017-2025 by Gregor Santner <gsantner AT mailbox DOT org>
- *   License of this file: Apache 2.0
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
-#########################################################*/
--->
+<?xml version="1.0" encoding="utf-8"?>
 <paths>
-    <external-path
-        name="external_files"
-        path="." />
-    <root-path
-        name="external_files"
-        path="/" />
+    <!-- Public shared storage (e.g., /storage/emulated/0/...) -->
+    <external-path name="external" path="."/>
+
+    <!-- App-specific external files: Android/data/<pkg>/files/... -->
+    <external-files-path name="external-files" path="."/>
+
+    <!-- Internal app storage -->
+    <files-path name="files" path="."/>
+    <cache-path name="cache" path="."/>
 </paths>

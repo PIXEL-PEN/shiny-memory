@@ -23,40 +23,52 @@ android {
     compileSdkVersion rootProject.ext.version_compileSdk
 
     defaultConfig {
-        resValue "string", "manifest_package_id", "net.gsantner.markor"
-        applicationId "net.gsantner.markor"
-        versionName "2.14.1"
-        versionCode 158
+        applicationId "net.pixelpen.markorplus"
+        versionCode 124
+        versionName "1.2.4"
 
-        multiDexEnabled true
         minSdkVersion rootProject.ext.version_minSdk
         targetSdkVersion rootProject.ext.version_compileSdk
+        multiDexEnabled true
+
+        // used by manifest: ${applicationId}.provider
+        resValue "string", "manifest_package_id", "net.pixelpen.markorplus"
+
         buildConfigField "boolean", "IS_TEST_BUILD", "false"
         buildConfigField "boolean", "IS_GPLAY_BUILD", "false"
         buildConfigField "String[]", "DETECTED_ANDROID_LOCALES", "${findUsedAndroidLocales()}"
         buildConfigField "String", "BUILD_DATE", "\"${getBuildDate()}\""
         buildConfigField "String", "GITHASH", "\"${getGitHash}\""
         buildConfigField "String", "GITMSG", "\"${getGitLastCommitMessage}\""
+
         setProperty("archivesBaseName", applicationId + "-v" + versionCode + "-" + versionName)
     }
 
     flavorDimensions "default"
+
     productFlavors {
         flavorAtest {
             applicationId "net.gsantner.markor_test"
             versionCode Integer.parseInt(new Date().format('yyMMdd'))
-            versionName defaultConfig.versionName + "-" + new Date().format('HHmm')
+            versionName "${defaultConfig.versionName}-${new Date().format('HHmm')}"
             buildConfigField "boolean", "IS_TEST_BUILD", "true"
+            buildConfigField "boolean", "IS_PIXELPEN_BUILD", "false"
         }
         flavorDefault {
-            applicationId "net.gsantner.markor_plus"   // ✅ new package ID
+            // do NOT set applicationId here; keep the one in defaultConfig
             versionCode Integer.parseInt(new Date().format('yyMMdd'))
-            versionName defaultConfig.versionName + "-" + new Date().format('HHmm')
+            versionName "${defaultConfig.versionName}-${new Date().format('HHmm')}"
             buildConfigField "boolean", "IS_TEST_BUILD", "true"
-            resValue "string", "app_name", "Markor Plus"   // ✅ new launcher name
+
+            // ✅ PixelPen flag — true for this flavor
+            buildConfigField "boolean", "IS_PIXELPEN_BUILD", "true"
+
+            // unique launcher label so icons aren’t identical
+            resValue "string", "app_name", "Markor Plus (PixelPen)"
         }
         flavorGplay {
             buildConfigField "boolean", "IS_GPLAY_BUILD", "true"
+            buildConfigField "boolean", "IS_PIXELPEN_BUILD", "false"
         }
     }
 
@@ -96,6 +108,7 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
+    // keep namespace as-is so imports net.gsantner.markor.R still work
     namespace 'net.gsantner.markor'
 }
 
