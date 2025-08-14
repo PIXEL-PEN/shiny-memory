@@ -10,7 +10,7 @@
     android:background="@android:color/white"
     tools:context=".activity.CalendarActivity">
 
-    <!-- Static header row for Calendar -->
+    <!-- Header -->
     <LinearLayout
         android:id="@+id/header_row"
         android:layout_width="match_parent"
@@ -21,7 +21,6 @@
         android:paddingEnd="12dp"
         android:orientation="horizontal">
 
-        <!-- Back + title on the left -->
         <LinearLayout
             android:id="@+id/header_click_target"
             android:layout_width="wrap_content"
@@ -52,13 +51,11 @@
                 android:paddingStart="4dp"/>
         </LinearLayout>
 
-        <!-- Spacer pushes gear to the far right -->
         <View
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_weight="1" />
 
-        <!-- Gear on the right -->
         <ImageButton
             android:id="@+id/btn_manage_categories_toolbar"
             android:layout_width="40dp"
@@ -69,10 +66,9 @@
             android:padding="8dp"
             android:src="@android:drawable/ic_menu_manage"
             app:tint="@android:color/white" />
-
     </LinearLayout>
 
-    <!-- Content wrapper (padding for everything below header) -->
+    <!-- Content -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -80,7 +76,6 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Calendar Grid with native CalendarView -->
         <FrameLayout
             android:id="@+id/calendar_grid_container"
             android:layout_width="match_parent"
@@ -92,23 +87,23 @@
                 android:id="@+id/calendarView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
-
-            <!-- Bottom divider under the calendar -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height=".9dp"
-                android:layout_gravity="bottom"
-                android:background="#222222" />
         </FrameLayout>
 
-        <!-- Browser icon row -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height=".9dp"
+            android:layout_gravity="bottom"
+            android:background="#222222" />
+
+        <!-- Browser icon row (lowered slightly toward the spinner) -->
         <LinearLayout
             android:id="@+id/browser_row"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="end"
             android:orientation="horizontal"
-            android:layout_marginBottom="4dp">
+            android:gravity="end"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="0dp">
 
             <ImageButton
                 android:id="@+id/btn_browser"
@@ -131,7 +126,6 @@
             android:gravity="center_vertical"
             android:weightSum="100">
 
-            <!-- Reset (compact) -->
             <Button
                 android:id="@+id/btn_reset"
                 android:layout_width="0dp"
@@ -149,7 +143,6 @@
                 android:layout_marginEnd="2dp"
                 android:background="@drawable/btn_reset_style" />
 
-            <!-- Submit (compact) -->
             <Button
                 android:id="@+id/btn_submit"
                 android:layout_width="0dp"
@@ -177,7 +170,6 @@
                 android:layout_marginEnd="2dp" />
         </LinearLayout>
 
-        <!-- Input Field -->
         <EditText
             android:id="@+id/input_note_title"
             android:layout_width="match_parent"
