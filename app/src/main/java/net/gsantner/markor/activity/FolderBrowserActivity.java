@@ -1,11 +1,8 @@
 package net.gsantner.markor.activity;
 
-
-
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -21,6 +18,7 @@ import net.gsantner.markor.model.Document;
 import net.gsantner.markor.model.FileNode;
 import net.gsantner.markor.model.FolderNode;
 import net.gsantner.markor.model.FolderTreeScanner;
+import net.gsantner.markor.util.StorageRoots;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -29,14 +27,11 @@ import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
-import net.gsantner.markor.util.StorageRoots;
-
 
 public class FolderBrowserActivity extends Activity {
 
     private static final String TAG = "WebViewDebug";
 
-    // Long-title & content thresholds
     private static final int TITLE_LEN_THRESHOLD = 120;           // chars (without .md)
     private static final long SIZE_THRESHOLD_BYTES = 2L * 1024L;  // 2 KB tiny-size heuristic
 
@@ -48,13 +43,11 @@ public class FolderBrowserActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_folder_browser);
 
-        // Keep IME hidden in this activity to reduce flash on outgoing launch
         getWindow().setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN
                         | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
         );
 
-        // ---- Static header (no ActionBar) ----
         View headerTap = findViewById(R.id.header_click_target);
         if (headerTap != null) headerTap.setOnClickListener(v -> finish());
         ImageButton backBtn = findViewById(R.id.btn_back);
@@ -62,17 +55,12 @@ public class FolderBrowserActivity extends Activity {
         TextView title = findViewById(R.id.title_text);
         if (title != null) title.setText("› Browser Tree");
 
-        // ---- Date Created chronology: leave intact ----
         net.gsantner.markor.model.CreationIndex cidx = new net.gsantner.markor.model.CreationIndex(this);
         net.gsantner.markor.model.FolderTreeScanner.setCreationIndex(cidx);
 
-        // --------------------------------------------
         webView = findViewById(R.id.folder_browser_webview);
-
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
-
-        // Don’t let WebView grab focus (helps prevent IME popping)
         webView.setFocusable(false);
         webView.setFocusableInTouchMode(false);
         webView.clearFocus();
@@ -80,9 +68,19 @@ public class FolderBrowserActivity extends Activity {
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, android.webkit.WebResourceRequest request) {
-                final String url = (request != null && request.getUrl() != null) ? request.getUrl().toString() : "";
-                Log.d(TAG, "Tapped URL: " + url);
+                String url = (request != null && request.getUrl() != null) ? request.getUrl().toString() : "";
+                return handleUrl(url);
+            }
 
+            @Override
+            @SuppressWarnings("deprecation")
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                return handleUrl(url);
+            }
+
+            private boolean handleUrl(String url) {
+                Log.d(TAG, "Tapped URL: " + url);
+                if (url == null) return false;
                 if (url.startsWith("note:")) {
                     String filePath = android.net.Uri.decode(url.substring("note:".length()));
                     openInMarkor(filePath);
@@ -96,27 +94,8 @@ public class FolderBrowserActivity extends Activity {
                 return false;
             }
 
-            @Override
-            @SuppressWarnings("deprecation")
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                Log.d(TAG, "Tapped URL (legacy): " + url);
-                if (url != null && url.startsWith("note:")) {
-                    String filePath = android.net.Uri.decode(url.substring("note:".length()));
-                    openInMarkor(filePath);
-                    return true;
-                }
-                if (url != null && url.startsWith("file://")) {
-                    String filePath = android.net.Uri.parse(url).getPath();
-                    openInMarkor(filePath);
-                    return true;
-                }
-                return false;
-            }
-
-            // Open: exact path first; fallback to best same-folder match
             private void openInMarkor(String filePath) {
                 try {
-                    // Hide keyboard + clear focus BEFORE launching to avoid flash
                     try {
                         View focused = getCurrentFocus();
                         if (focused != null) focused.clearFocus();
@@ -139,19 +118,11 @@ public class FolderBrowserActivity extends Activity {
                         startActivity(intent);
                         overridePendingTransition(0, 0);
                     } else {
-                        android.widget.Toast.makeText(
-                                FolderBrowserActivity.this,
-                                "File not found:\n" + filePath,
-                                android.widget.Toast.LENGTH_SHORT
-                        ).show();
+                        android.widget.Toast.makeText(FolderBrowserActivity.this, "File not found:\n" + filePath, android.widget.Toast.LENGTH_SHORT).show();
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    android.widget.Toast.makeText(
-                            FolderBrowserActivity.this,
-                            "Unable to open file.",
-                            android.widget.Toast.LENGTH_SHORT
-                    ).show();
+                    android.widget.Toast.makeText(FolderBrowserActivity.this, "Unable to open file.", android.widget.Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -195,11 +166,8 @@ public class FolderBrowserActivity extends Activity {
         String selectedCategory = getIntent().getStringExtra("selectedCategory");
         String selectedMonth = getIntent().getStringExtra("selectedMonth");
 
-        // Use canonical root for this build (no other changes)
         rootFolder = StorageRoots.getWorkingRoot(this);
-
         FolderNode tree = FolderTreeScanner.scan(rootFolder, selectedCategory, selectedMonth);
-
         String html = buildHtml(tree, selectedCategory, selectedMonth);
         webView.loadDataWithBaseURL(null, html, "text/html", "utf-8", null);
     }
@@ -215,10 +183,11 @@ public class FolderBrowserActivity extends Activity {
                 .append(".folder.collapsed .arrow { transform: rotate(0deg); }")
                 .append(".folder.expanded .arrow { transform: rotate(90deg); }")
                 .append(".file { display: flex; align-items: flex-start; margin: 8px 0 0; font-size: 16px; gap: 10px; padding-bottom: 6px; border-bottom: 1px solid #ddd; }")
-                .append(".file .icon { width:28px; display:flex; align-items:flex-start; justify-content:center; margin-top:3px; line-height:1; }")
+                .append(".file .icon { width:28px; position:relative; display:flex; align-items:flex-start; justify-content:center; margin-top:3px; line-height:1; }")
                 .append(".file .icon .doc { font-size:24px!important; position:relative; top:3px; display:inline-block; transform:translateY(1px); color:#1c1c1c; }")
-                .append(".flag-square { width:11px; height:11px; border-radius:3px; background:#d35400; }")
-                .append(".flag-square.hollow { background:transparent; border:2px solid #d35400; }")
+                .append(".dot-flag { width:8px; height:8px; border-radius:50%; position:absolute; bottom:0; right:0; }")
+                .append(".dot-flag.full { background:#d35400; }")
+                .append(".dot-flag.empty { background:transparent; border:1px solid #d35400; }")
                 .append(".note-title { font-size: 17px; font-weight: 500; margin-left:2px; }")
                 .append(".note-meta  { font-size: 12px; color: #6e6e6e; margin-left: 0; white-space: nowrap; display: block; }")
                 .append(".note-meta span.sep { padding: 0 2px; }")
@@ -291,19 +260,14 @@ public class FolderBrowserActivity extends Activity {
 
             String baseName = file.name.replaceAll("\\.md$", "");
             boolean isLongTitle = baseName.length() >= TITLE_LEN_THRESHOLD;
+            boolean substantial =
+                    (file.file != null && file.file.length() >= SIZE_THRESHOLD_BYTES)
+                            || (file.file != null && hasAnyContentBeyondSeed(file.file));
 
-            // Default icon with wrapper for styling
             String iconHtml = "<span class='doc'>📄</span>";
-
             if (isLongTitle) {
-                boolean substantial =
-                        (file.file != null && file.file.length() >= SIZE_THRESHOLD_BYTES)
-                                || (file.file != null && hasAnyContentBeyondSeed(file.file));
-
-                // Hollow square for long-title; solid square if substantial content as well
-                iconHtml = substantial
-                        ? "<span class='flag-square' title='Long title & content present'></span>"
-                        : "<span class='flag-square hollow' title='Long title'></span>";
+                String dotClass = substantial ? "dot-flag full" : "dot-flag empty";
+                iconHtml += "<span class='" + dotClass + "'></span>";
             }
 
             sb.append("<div class='file' style='").append(fileIndent).append("'>")
@@ -319,17 +283,15 @@ public class FolderBrowserActivity extends Activity {
         sb.append("</div>");
     }
 
-    // --- Helper: true if there is ANY non-empty content beyond the first (seed) line ---
     private boolean hasAnyContentBeyondSeed(File f) {
         BufferedReader br = null;
         try {
             br = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
-            // skip first line (seeded datestamp)
             br.readLine();
             String line;
             while ((line = br.readLine()) != null) {
                 if (!line.trim().isEmpty()) {
-                    return true; // any real content beyond seed
+                    return true;
                 }
             }
             return false;
