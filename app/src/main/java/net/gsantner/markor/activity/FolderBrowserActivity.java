@@ -215,8 +215,9 @@ public class FolderBrowserActivity extends Activity {
                 .append(".folder.collapsed .arrow { transform: rotate(0deg); }")
                 .append(".folder.expanded .arrow { transform: rotate(90deg); }")
                 .append(".file { display: flex; align-items: flex-start; margin: 8px 0 0; font-size: 16px; gap: 10px; padding-bottom: 6px; border-bottom: 1px solid #ddd; }")
-                .append(".file .icon { width:16px; display:flex; align-items:center; justify-content:center; margin-top:1px; }")
-                .append(".flag-square { width:12px; height:12px; border-radius:3px; background:#d35400; }")
+                .append(".file .icon { width:28px; display:flex; align-items:flex-start; justify-content:center; margin-top:3px; line-height:1; }")
+                .append(".file .icon .doc { font-size:24px!important; position:relative; top:3px; display:inline-block; transform:translateY(1px); color:#1c1c1c; }")
+                .append(".flag-square { width:11px; height:11px; border-radius:3px; background:#d35400; }")
                 .append(".flag-square.hollow { background:transparent; border:2px solid #d35400; }")
                 .append(".note-title { font-size: 17px; font-weight: 500; margin-left:2px; }")
                 .append(".note-meta  { font-size: 12px; color: #6e6e6e; margin-left: 0; white-space: nowrap; display: block; }")
@@ -291,8 +292,8 @@ public class FolderBrowserActivity extends Activity {
             String baseName = file.name.replaceAll("\\.md$", "");
             boolean isLongTitle = baseName.length() >= TITLE_LEN_THRESHOLD;
 
-            // Default icon
-            String iconHtml = "📄";
+            // Default icon with wrapper for styling
+            String iconHtml = "<span class='doc'>📄</span>";
 
             if (isLongTitle) {
                 boolean substantial =
