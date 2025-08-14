@@ -5,8 +5,10 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.text.InputFilter;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CalendarView;
@@ -42,6 +44,10 @@ public class CalendarActivity extends AppCompatActivity
 
     private static final String DEFAULT_CATEGORY = "General";
 
+    // === NEW: Add-category affordance & validation ===
+    private static final String ADD_CATEGORY_ITEM = "➕ Add category…";
+    private static final int CATEGORY_MAX_LEN = 40;
+
     // Prefs keys for our UI-controlled list
     private static final String PREFS_NAME = "category_ui_prefs";
     private static final String KEY_UI_LIST = "ui_category_list";       // StringSet
@@ -55,6 +61,8 @@ public class CalendarActivity extends AppCompatActivity
     private final Calendar selectedCalendarDate = Calendar.getInstance();
 
     private ArrayAdapter<String> categoryAdapter;
+    // === NEW: remember last real selection so Add… doesn't stick ===
+    private int lastRealCategorySelection = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,9 +88,7 @@ public class CalendarActivity extends AppCompatActivity
         // Gear (manage categories)
         ImageButton gear = findViewById(R.id.btn_manage_categories_toolbar);
         if (gear != null) {
-            // Single tap → open category editor
             gear.setOnClickListener(v -> openManageCategoriesDialog());
-            // Long press → popup maintenance tools
             gear.setOnLongClickListener(v -> {
                 showCategoryToolsPopup(v);
                 return true;
@@ -112,7 +118,8 @@ public class CalendarActivity extends AppCompatActivity
             // Default to "General" (or first item if missing)
             List<String> cats = loadCategoriesForSpinner();
             int idxDefault = indexOfIgnoreCase(cats, DEFAULT_CATEGORY);
-            spinnerCategory.setSelection(idxDefault >= 0 ? idxDefault : 0);
+            spinnerCategory.setSelection(idxDefault >= 0 ? idxDefault : 0, false);
+            lastRealCategorySelection = spinnerCategory.getSelectedItemPosition();
             calendarView.setDate(System.currentTimeMillis(), false, true);
             selectedCalendarDate.setTimeInMillis(System.currentTimeMillis());
             Toast.makeText(CalendarActivity.this, "Reset", Toast.LENGTH_SHORT).show();
@@ -123,7 +130,9 @@ public class CalendarActivity extends AppCompatActivity
 
         // Open folder browser
         btnBrowser.setOnClickListener(v -> {
-            String selectedCategory = spinnerCategory.getSelectedItem().toString();
+            String selectedCategory = spinnerCategory.getSelectedItem() == null
+                    ? DEFAULT_CATEGORY
+                    : spinnerCategory.getSelectedItem().toString();
             SimpleDateFormat monthFormat = new SimpleDateFormat("MM_MMMM", Locale.getDefault());
             String selectedMonth = monthFormat.format(selectedCalendarDate.getTime());
 
@@ -244,6 +253,7 @@ public class CalendarActivity extends AppCompatActivity
                         if (DEFAULT_CATEGORY.equalsIgnoreCase(s)) { idxGeneral = i; break; }
                     }
                     spinnerCategory.setSelection(idxGeneral >= 0 ? idxGeneral : 0, false);
+                    lastRealCategorySelection = spinnerCategory.getSelectedItemPosition();
                 }
             }
         }
@@ -310,21 +320,28 @@ public class CalendarActivity extends AppCompatActivity
 
         List<String> cats = loadCategoriesForSpinner();
 
+        // Build a display list with the special "Add…" item appended
+        List<String> display = new ArrayList<>(cats);
+        display.add(ADD_CATEGORY_ITEM);
+
         if (categoryAdapter == null) {
-            categoryAdapter = new ArrayAdapter<>(this, R.layout.spinner_item, cats);
+            categoryAdapter = new ArrayAdapter<>(this, R.layout.spinner_item, display);
             categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             spinnerCategory.setAdapter(categoryAdapter);
         } else {
             categoryAdapter.clear();
-            categoryAdapter.addAll(cats);
+            categoryAdapter.addAll(display);
             categoryAdapter.notifyDataSetChanged();
         }
 
+        attachCategorySpinnerListener(); // ensure listener installed (idempotent)
+
         if (keepSelection) {
             if (previous != null) {
-                int idxPrev = indexOfIgnoreCase(cats, previous);
+                int idxPrev = indexOfIgnoreCase(cats, previous); // search among real categories only
                 if (idxPrev >= 0) {
                     spinnerCategory.setSelection(idxPrev, false);
+                    lastRealCategorySelection = idxPrev;
                     return;
                 }
             }
@@ -334,8 +351,107 @@ public class CalendarActivity extends AppCompatActivity
         int idxDefault = indexOfIgnoreCase(cats, DEFAULT_CATEGORY);
         if (idxDefault >= 0) {
             spinnerCategory.setSelection(idxDefault, false);
+            lastRealCategorySelection = idxDefault;
         } else if (!cats.isEmpty()) {
             spinnerCategory.setSelection(0, false);
+            lastRealCategorySelection = 0;
+        } else {
+            // Only "Add…" present; keep selection at 0 but do not treat as real selection
+            spinnerCategory.setSelection(0, false);
+            lastRealCategorySelection = 0;
+        }
+    }
+
+    // === NEW: Listener to handle the special "Add…" item ===
+    private void attachCategorySpinnerListener() {
+        spinnerCategory.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            boolean firstFire = true;
+
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (firstFire) { firstFire = false; return; }
+
+                String chosen = (String) parent.getItemAtPosition(position);
+                if (ADD_CATEGORY_ITEM.equals(chosen)) {
+                    // Revert to the last real selection, then prompt Add
+                    spinnerCategory.setSelection(lastRealCategorySelection, false);
+                    showAddCategoryDialog();
+                } else {
+                    lastRealCategorySelection = position;
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) { /* no-op */ }
+        });
+    }
+
+    // === NEW: Add Category dialog & helpers ===
+    private void showAddCategoryDialog() {
+        final EditText input = new EditText(this);
+        input.setSingleLine(true);
+        input.setHint("New category name");
+        input.setFilters(new InputFilter[]{ new InputFilter.LengthFilter(CATEGORY_MAX_LEN) });
+
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Add Category")
+                .setMessage("Choose a concise name (no \\/:*?\"<>|)")
+                .setView(input)
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton("Add", (d, w) -> {
+                    String name = input.getText() == null ? "" : input.getText().toString();
+                    if (!isValidCategoryName(name)) {
+                        Toast.makeText(this,
+                                "Invalid or duplicate name.\n(Disallowed: \\/:*?\"<>|, max " + CATEGORY_MAX_LEN + " chars)",
+                                Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    addCategoryPersistAndSelect(name.trim());
+                })
+                .show();
+    }
+
+    private boolean isValidCategoryName(String name) {
+        if (name == null) return false;
+        String trimmed = name.trim();
+        if (trimmed.isEmpty()) return false;
+        if (trimmed.length() > CATEGORY_MAX_LEN) return false;
+        if (trimmed.matches(".*[\\\\/:*?\"<>|].*")) return false;
+
+        // Case-insensitive uniqueness against current list (UI-authoritative if set)
+        List<String> existing = loadCategoriesForSpinner();
+        return indexOfIgnoreCase(existing, trimmed) < 0;
+    }
+
+    private void addCategoryPersistAndSelect(String newName) {
+        // Start from authoritative current list (prefer UI if enabled)
+        List<String> list = loadCategoriesForSpinner();
+        list.add(newName);
+        try { Collections.sort(list, String.CASE_INSENSITIVE_ORDER); } catch (Throwable ignored) { }
+
+        // Persist to UI list & prefer UI going forward
+        saveUiCategoryList(list);
+        setPreferUi(true);
+
+        // Rebind spinner and select the new item
+        String previous = newName;
+        List<String> display = new ArrayList<>(list);
+        display.add(ADD_CATEGORY_ITEM);
+
+        if (categoryAdapter == null) {
+            categoryAdapter = new ArrayAdapter<>(this, R.layout.spinner_item, display);
+            categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            spinnerCategory.setAdapter(categoryAdapter);
+        } else {
+            categoryAdapter.clear();
+            categoryAdapter.addAll(display);
+            categoryAdapter.notifyDataSetChanged();
+        }
+
+        int idxNew = indexOfIgnoreCase(list, previous);
+        if (idxNew >= 0) {
+            spinnerCategory.setSelection(idxNew, false);
+            lastRealCategorySelection = idxNew;
         }
     }
 
@@ -355,7 +471,15 @@ public class CalendarActivity extends AppCompatActivity
             return;
         }
 
-        String category = spinnerCategory.getSelectedItem().toString();
+        String category = spinnerCategory.getSelectedItem() == null
+                ? DEFAULT_CATEGORY
+                : spinnerCategory.getSelectedItem().toString();
+
+        // Guard against accidentally using the special Add item
+        if (ADD_CATEGORY_ITEM.equals(category)) {
+            Toast.makeText(this, "Please choose a category.", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         Calendar calendar = selectedCalendarDate;
         SimpleDateFormat yearFormat = new SimpleDateFormat("yyyy", Locale.getDefault());
@@ -424,7 +548,14 @@ public class CalendarActivity extends AppCompatActivity
     }
 
     private void saveUiCategoryList(List<String> list) {
-        Set<String> set = new HashSet<>(list);
+        // Filter out any accidental inclusion of the special "Add…" item
+        List<String> clean = new ArrayList<>();
+        for (String s : list) {
+            if (s != null && !ADD_CATEGORY_ITEM.equals(s)) {
+                clean.add(s);
+            }
+        }
+        Set<String> set = new HashSet<>(clean);
         prefs().edit().putStringSet(KEY_UI_LIST, set).apply();
     }
 
@@ -445,7 +576,9 @@ public class CalendarActivity extends AppCompatActivity
         List<String> cur = new ArrayList<>();
         for (int i = 0; i < categoryAdapter.getCount(); i++) {
             String s = categoryAdapter.getItem(i);
-            if (s != null) cur.add(s);
+            if (s != null && !ADD_CATEGORY_ITEM.equals(s)) {
+                cur.add(s);
+            }
         }
         saveUiCategoryList(cur);
     }

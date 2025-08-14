@@ -6,4 +6,9 @@
     <dimen name="appbar_padding_top">8dp</dimen>
     <dimen name="textactions_bar_height">46dp</dimen>
     <dimen name="dialog_corner_radius">16dp</dimen>
+
+    <!-- Size for note/document icon in folder tree -->
+    <dimen name="note_emoji_icon_sp">22sp</dimen>
+    <dimen name="note_icon_size">22sp</dimen>
+
 </resources>
