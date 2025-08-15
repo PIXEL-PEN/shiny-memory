@@ -62,7 +62,6 @@ public class CalendarActivity extends AppCompatActivity
 
     private ArrayAdapter<String> categoryAdapter;
     private int lastRealCategorySelection = 0;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -92,17 +91,22 @@ public class CalendarActivity extends AppCompatActivity
                 showCategoryToolsPopup(v);
                 return true;
             });
+            gear.setLongClickable(true);
         }
 
-        // Initial categories
-        bindCategories(false);
+// Browser button — click only
+        if (btnBrowser != null) {
+            btnBrowser.setOnClickListener(v -> {
+                android.content.Intent intent =
+                        new android.content.Intent(CalendarActivity.this, FolderBrowserActivity.class);
+                startActivity(intent);
+            });
+            btnBrowser.setOnLongClickListener(null);
+            btnBrowser.setLongClickable(false);
+        }
 
-        // Long press folder icon to open editor
-        btnBrowser.setOnLongClickListener(v -> {
-            openManageCategoriesDialog();
-            Toast.makeText(this, "Manage categories…", Toast.LENGTH_SHORT).show();
-            return true;
-        });
+// Initial categories
+        bindCategories(false);
 
         // Calendar date change
         calendarView.setOnDateChangeListener((view, year, month, dayOfMonth) -> {
