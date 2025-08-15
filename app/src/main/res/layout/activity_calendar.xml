@@ -177,7 +177,7 @@
             android:layout_marginTop="12dp"
             android:hint="Enter note title.."
             android:textColorHint="@android:color/darker_gray"
-            android:inputType="textMultiLine"
+            android:inputType="textMultiLine|textCapSentences"
             android:maxLength="250"
             android:maxLines="10"
             android:gravity="top|start"
@@ -186,5 +186,6 @@
             android:scrollbars="vertical"
             android:overScrollMode="always"
             android:scrollHorizontally="false" />
+
     </LinearLayout>
 </LinearLayout>

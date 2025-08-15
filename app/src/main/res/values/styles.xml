@@ -74,6 +74,12 @@
         <item name="android:paddingEnd">8dip</item>
     </style>
 
+    <style name="CustomCalendarView" parent="@android:style/Widget.CalendarView">
+        <item name="android:selectedDateVerticalBar">@drawable/calendar_date_selector</item>
+    </style>
+
+
+
     <style name="Theme.AppCompat.DayNight.Dialog.Rounded" parent="Theme.AppCompat.DayNight.Dialog">
         <item name="dialogCornerRadius">@dimen/dialog_corner_radius</item>
         <item name="android:backgroundDimEnabled">true</item>
