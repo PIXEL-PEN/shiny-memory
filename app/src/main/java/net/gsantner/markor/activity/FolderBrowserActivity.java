@@ -43,6 +43,7 @@ public class FolderBrowserActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_folder_browser);
 
+
         getWindow().setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN
                         | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
