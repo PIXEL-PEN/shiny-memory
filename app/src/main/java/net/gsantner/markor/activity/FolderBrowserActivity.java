@@ -181,9 +181,23 @@ public class FolderBrowserActivity extends Activity {
         String selectedMonth = getIntent().getStringExtra("selectedMonth");
 
         rootFolder = StorageRoots.getWorkingRoot(this);
-        FolderNode tree = FolderTreeScanner.scan(rootFolder, selectedCategory, selectedMonth);
-        String html = buildHtml(tree, selectedCategory, selectedMonth);
-        webView.loadDataWithBaseURL(null, html, "text/html", "utf-8", null);
+        final java.io.File rf = rootFolder;
+        final String cat = selectedCategory;
+        final String mon = selectedMonth;
+
+        webView.loadDataWithBaseURL(null, "<html><body style='font-family:sans-serif;padding:16px'>Loading…</body></html>", "text/html", "utf-8", null);
+
+        new Thread(() -> {
+            FolderNode tree = FolderTreeScanner.scan(rf, cat, mon);
+            String html = buildHtml(tree, cat, mon);
+            runOnUiThread(() -> {
+                if (!isFinishing()) {
+                    webView.loadDataWithBaseURL(null, html, "text/html", "utf-8", null);
+                }
+            });
+        }).start();
+
+
     }
 
     private String buildHtml(FolderNode root, String selectedCategory, String selectedMonth) {
