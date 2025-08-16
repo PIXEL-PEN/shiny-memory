@@ -48,6 +48,7 @@ android {
 
     productFlavors {
         flavorAtest {
+            dimension "default"
             applicationId "net.gsantner.markor_test"
             versionCode Integer.parseInt(new Date().format('yyMMdd'))
             versionName "${defaultConfig.versionName}-${new Date().format('HHmm')}"
@@ -55,18 +56,23 @@ android {
             buildConfigField "boolean", "IS_PIXELPEN_BUILD", "false"
         }
         flavorDefault {
-            // do NOT set applicationId here; keep the one in defaultConfig
+            dimension "default"
             versionCode Integer.parseInt(new Date().format('yyMMdd'))
             versionName "${defaultConfig.versionName}-${new Date().format('HHmm')}"
             buildConfigField "boolean", "IS_TEST_BUILD", "true"
-
-            // ✅ PixelPen flag — true for this flavor
             buildConfigField "boolean", "IS_PIXELPEN_BUILD", "true"
-
-            // unique launcher label so icons aren’t identical
             resValue "string", "app_name", "Markor Plus "
         }
+        pixelpen {
+            dimension "default"
+            versionCode Integer.parseInt(new Date().format('yyMMdd'))
+            versionName "${defaultConfig.versionName}-${new Date().format('HHmm')}"
+            buildConfigField "boolean", "IS_TEST_BUILD", "true"
+            buildConfigField "boolean", "IS_PIXELPEN_BUILD", "true"
+            resValue "string", "app_name", "PixelPen"
+        }
         flavorGplay {
+            dimension "default"
             buildConfigField "boolean", "IS_GPLAY_BUILD", "true"
             buildConfigField "boolean", "IS_PIXELPEN_BUILD", "false"
         }
