@@ -63,6 +63,12 @@
             android:name=".activity.IntroActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".activity.openeditor.OpenFromShortcutOrWidgetActivity"
+            android:exported="true"
+            android:launchMode="singleTop" />
+
+
 
         <activity
             android:name=".activity.MainActivity"

@@ -40,14 +40,12 @@ public class ShortcutUtils {
     private static final int MAX_RECENT_DOCUMENTS = 1;
 
     private ShortcutUtils() {
-
     }
 
     /**
      * Update the app shortcuts.
-     * The list will contain a link to to-do, QuickNote and 1 recent documents.
-     * <p>
-     * Due to a limit in the Android API, only 4 shortcuts can be displayed.
+     * The list will contain a link to to-do, QuickNote and recent documents.
+     * Due to a limit in the Android API, only a few shortcuts can be displayed.
      *
      * @param context Context
      */
@@ -58,15 +56,19 @@ public class ShortcutUtils {
             }
 
             final ShortcutManager shortcutManager = context.getSystemService(ShortcutManager.class);
-            final List<ShortcutInfo> newShortcuts = new ArrayList<>();
+            if (shortcutManager == null) {
+                return;
+            }
 
+            final List<ShortcutInfo> newShortcuts = new ArrayList<>();
             final AppSettings appSettings = ApplicationObject.settings();
 
-            // Create the to-do shortcut
+            // To-Do shortcut
             final Intent openTodo = new Intent(context, OpenFromShortcutOrWidgetActivity.class)
                     .setAction(Intent.ACTION_EDIT)
                     .setData(Uri.fromFile(appSettings.getTodoFile()))
-                    .putExtra(Document.EXTRA_FILE_LINE_NUMBER, -1);
+                    .putExtra(Document.EXTRA_FILE_LINE_NUMBER, -1)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NO_ANIMATION);
 
             final ShortcutInfo shortcutToDo = new ShortcutInfo.Builder(context, ID_TO_DO)
                     .setShortLabel(createShortLabel(context.getString(R.string.todo)))
@@ -76,11 +78,12 @@ public class ShortcutUtils {
                     .build();
             newShortcuts.add(shortcutToDo);
 
-            // Create the QuickNote shortcut
+            // QuickNote shortcut
             final Intent openQuickNote = new Intent(context, OpenFromShortcutOrWidgetActivity.class)
                     .setAction(Intent.ACTION_EDIT)
                     .setData(Uri.fromFile(appSettings.getQuickNoteFile()))
-                    .putExtra(Document.EXTRA_FILE_LINE_NUMBER, -1);
+                    .putExtra(Document.EXTRA_FILE_LINE_NUMBER, -1)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NO_ANIMATION);
 
             final ShortcutInfo shortcutQuickNote = new ShortcutInfo.Builder(context, ID_QUICK_NOTE)
                     .setShortLabel(createShortLabel(context.getString(R.string.quicknote)))
@@ -90,18 +93,18 @@ public class ShortcutUtils {
                     .build();
             newShortcuts.add(shortcutQuickNote);
 
-            // Generate shortcuts for the most recent documents. Maximum of MAX_RECENT_DOCUMENTS.
+            // Recent documents (max 1)
             final List<String> recentDocuments = appSettings.getRecentDocuments();
-
             for (int i = 0; i < Math.min(MAX_RECENT_DOCUMENTS, recentDocuments.size()); i++) {
                 final File file = new File(recentDocuments.get(i));
 
                 final Intent openFile = new Intent(context, OpenFromShortcutOrWidgetActivity.class)
-                        .addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
                         .setAction(Intent.ACTION_EDIT)
-                        .setData(Uri.fromFile(file));
+                        .setData(Uri.fromFile(file))
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NO_ANIMATION);
 
                 final String name = file.getName();
+
                 newShortcuts.add(new ShortcutInfo.Builder(context, ID_PREFIX + name)
                         .setShortLabel(createShortLabel(name))
                         .setLongLabel(createLongLabel(name))
@@ -114,6 +117,11 @@ public class ShortcutUtils {
         } catch (Exception error) {
             error.printStackTrace();
         }
+    }
+
+    // Alias for callers that may reference updateShortcuts(...)
+    public static void updateShortcuts(@NonNull Context context) {
+        setShortcuts(context);
     }
 
     /**

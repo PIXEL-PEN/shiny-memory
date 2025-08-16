@@ -43,6 +43,19 @@ public class FolderBrowserActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_folder_browser);
 
+        // Shortcuts: clear stale and refresh dynamically (flavor-safe)
+        if (android.os.Build.VERSION.SDK_INT >= 25) {
+            android.content.pm.ShortcutManager sm = getSystemService(android.content.pm.ShortcutManager.class);
+            if (sm != null) sm.removeAllDynamicShortcuts();
+        }
+        try {
+            Class<?> c = Class.forName("net.gsantner.markor.util.ShortcutUtils");
+            java.lang.reflect.Method m = c.getMethod("updateShortcuts", android.content.Context.class);
+            m.invoke(null, this);
+        } catch (Throwable ignored) {}
+
+
+
 
         getWindow().setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN
