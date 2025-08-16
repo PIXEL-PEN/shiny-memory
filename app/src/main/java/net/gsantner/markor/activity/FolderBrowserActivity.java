@@ -38,12 +38,13 @@ public class FolderBrowserActivity extends Activity {
     private WebView webView;
     private File rootFolder;
 
+    // [onCreate] FolderBrowserActivity — revert to first Loading… iteration (async scan, full hierarchy)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_folder_browser);
 
-        // Shortcuts: clear stale and refresh dynamically (flavor-safe)
+        // Shortcuts refresh (safe no-op if missing)
         if (android.os.Build.VERSION.SDK_INT >= 25) {
             android.content.pm.ShortcutManager sm = getSystemService(android.content.pm.ShortcutManager.class);
             if (sm != null) sm.removeAllDynamicShortcuts();
@@ -53,9 +54,6 @@ public class FolderBrowserActivity extends Activity {
             java.lang.reflect.Method m = c.getMethod("updateShortcuts", android.content.Context.class);
             m.invoke(null, this);
         } catch (Throwable ignored) {}
-
-
-
 
         getWindow().setSoftInputMode(
                 WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN
@@ -81,8 +79,13 @@ public class FolderBrowserActivity extends Activity {
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
-            public boolean shouldOverrideUrlLoading(WebView view, android.webkit.WebResourceRequest request) {
-                String url = (request != null && request.getUrl() != null) ? request.getUrl().toString() : "";
+            public boolean shouldOverrideUrlLoading(
+                    WebView view,
+                    android.webkit.WebResourceRequest request
+            ) {
+                String url = (request != null && request.getUrl() != null)
+                        ? request.getUrl().toString()
+                        : "";
                 return handleUrl(url);
             }
 
@@ -95,6 +98,7 @@ public class FolderBrowserActivity extends Activity {
             private boolean handleUrl(String url) {
                 Log.d(TAG, "Tapped URL: " + url);
                 if (url == null) return false;
+
                 if (url.startsWith("note:")) {
                     String filePath = android.net.Uri.decode(url.substring("note:".length()));
                     openInMarkor(filePath);
@@ -114,7 +118,8 @@ public class FolderBrowserActivity extends Activity {
                         View focused = getCurrentFocus();
                         if (focused != null) focused.clearFocus();
                         if (webView != null) webView.clearFocus();
-                        InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                        android.view.inputmethod.InputMethodManager imm =
+                                (android.view.inputmethod.InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
                         if (imm != null) {
                             View anchor = (focused != null) ? focused : webView;
                             if (anchor != null) imm.hideSoftInputFromWindow(anchor.getWindowToken(), 0);
@@ -125,9 +130,9 @@ public class FolderBrowserActivity extends Activity {
                     File target = requested.exists() ? requested : findBestMatch(requested);
 
                     if (target != null && target.exists()) {
-                        Intent intent = new Intent(FolderBrowserActivity.this, DocumentActivity.class);
-                        intent.putExtra(Document.EXTRA_FILE, target);
-                        intent.putExtra(Document.EXTRA_DO_PREVIEW, true);
+                        Intent intent = new Intent(FolderBrowserActivity.this, net.gsantner.markor.activity.DocumentActivity.class);
+                        intent.putExtra(net.gsantner.markor.model.Document.EXTRA_FILE, target);
+                        intent.putExtra(net.gsantner.markor.model.Document.EXTRA_DO_PREVIEW, true);
                         intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                         startActivity(intent);
                         overridePendingTransition(0, 0);
@@ -173,7 +178,7 @@ public class FolderBrowserActivity extends Activity {
                 String n = name;
                 int dot = n.lastIndexOf('.');
                 if (dot > 0) n = n.substring(0, dot);
-                return n.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", "");
+                return n.toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9]+", "");
             }
         });
 
@@ -185,7 +190,13 @@ public class FolderBrowserActivity extends Activity {
         final String cat = selectedCategory;
         final String mon = selectedMonth;
 
-        webView.loadDataWithBaseURL(null, "<html><body style='font-family:sans-serif;padding:16px'>Loading…</body></html>", "text/html", "utf-8", null);
+        webView.loadDataWithBaseURL(
+                null,
+                "<html><body style='font-family:sans-serif;padding:16px'>Loading…</body></html>",
+                "text/html",
+                "utf-8",
+                null
+        );
 
         new Thread(() -> {
             FolderNode tree = FolderTreeScanner.scan(rf, cat, mon);
@@ -196,9 +207,8 @@ public class FolderBrowserActivity extends Activity {
                 }
             });
         }).start();
-
-
     }
+
 
     private String buildHtml(FolderNode root, String selectedCategory, String selectedMonth) {
         StringBuilder sb = new StringBuilder();

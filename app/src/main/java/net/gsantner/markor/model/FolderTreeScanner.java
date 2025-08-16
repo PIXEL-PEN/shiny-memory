@@ -16,7 +16,7 @@ public class FolderTreeScanner {
 
     // Matches leading numeric prefix like "01_January" or "1-January"
     private static final Pattern LEADING_NUM = Pattern.compile("^(\\d{1,2})[_-].*");
-    private static final Pattern MD_SUFFIX   = Pattern.compile("\\.md$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern MD_SUFFIX = Pattern.compile("\\.md$", Pattern.CASE_INSENSITIVE);
 
     // ---- Creation index integration ----
     private static net.gsantner.markor.model.CreationIndex sCreationIndex;
@@ -25,19 +25,25 @@ public class FolderTreeScanner {
         sCreationIndex = idx;
     }
 
-    /** Lookup stable "created" time; lazily backfill (one-time) when missing. */
+    // Skip marker helper
+    private static boolean shouldSkipDir(java.io.File dir) {
+        return new java.io.File(dir, ".nomedia").exists()
+                || new java.io.File(dir, ".skip-scan").exists();
+    }
+
+    /**
+     * Lookup stable "created" time; lazily backfill (one-time) when missing.
+     */
     private static long getIndexedCreated(File f) {
         if (sCreationIndex != null) {
             Long v = sCreationIndex.get(f);
             if (v != null && v > 0L) {
-                return v; // already indexed -> stable across edits
+                return v;
             }
-            // Lazy backfill: adopt current lastModified as creation time once
             long created = f.lastModified();
             sCreationIndex.put(f, created);
             return created;
         }
-        // No index provided -> fall back
         return f.lastModified();
     }
     // ---- /Creation index integration ----
@@ -55,13 +61,10 @@ public class FolderTreeScanner {
             Log.w("FolderTree", "scan(): invalid root: " + root);
             return null;
         }
-        // Build the tree
         FolderNode tree = scanRecursive(root, 0, selectedCategory, selectedMonth, false);
         if (tree != null) {
-            // Root always expanded so the user sees content immediately
             tree.expanded = true;
         }
-        // Persist any lazy backfills so future scans remain stable
         if (sCreationIndex != null) {
             sCreationIndex.save();
         }
@@ -123,6 +126,9 @@ public class FolderTreeScanner {
 
         // Recurse into children
         for (File d : dirs) {
+            if (shouldSkipDir(d)) {
+                continue;
+            }
             FolderNode child = scanRecursive(
                     d,
                     depth + 1,
@@ -139,23 +145,16 @@ public class FolderTreeScanner {
             node.files.add(new FileNode(displayName, f, depth + 1));
         }
 
-        // Expansion logic:
-        // - Root (depth 0) expanded by caller (post-processing).
-        // - Year (depth 1) expands only if it contains the selected month.
-        // - Month (depth 2) expands if its name == selectedMonth.
-        // - Category (depth 3) expands only if its name == selectedCategory and ancestor is the selected month.
+        // Expansion logic
         if (depth == 1) {
-            // Expand year only if any child month equals selectedMonth
             if (containsMonth(node, selectedMonth)) {
                 node.expanded = true;
             }
         } else if (depth == 2) {
-            // Expand the selected month folder itself
             if (thisIsSelectedMonth) {
                 node.expanded = true;
             }
         } else if (depth == 3) {
-            // Expand the selected category only if we're already inside the selected month path
             if (monthMatchedAbove && selectedCategory != null
                     && equalsIgnoreCaseSafe(dir.getName(), selectedCategory)) {
                 node.expanded = true;
@@ -168,7 +167,6 @@ public class FolderTreeScanner {
     // ----- Helpers -----
 
     public static String formatShortDate(long timeMillis) {
-        // Spaces around pipes are baked in; keep non-US day/month order
         return new SimpleDateFormat("EEE | d MMM | yy", Locale.getDefault())
                 .format(new Date(timeMillis));
     }
@@ -192,7 +190,6 @@ public class FolderTreeScanner {
             int na = extractLeadingNumber(a.getName());
             int nb = extractLeadingNumber(b.getName());
 
-            // If either has a number, sort by that number; if both or neither, fall back to alpha
             if (na != Integer.MAX_VALUE || nb != Integer.MAX_VALUE) {
                 int cmp = Integer.compare(na, nb);
                 if (cmp != 0) return cmp;
@@ -209,6 +206,6 @@ public class FolderTreeScanner {
             } catch (Exception ignored) {
             }
         }
-        return Integer.MAX_VALUE; // Non-numbered go after numbered folders
+        return Integer.MAX_VALUE;
     }
 }
