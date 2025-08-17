@@ -60,11 +60,12 @@ android {
         }
         pixelpen {
             dimension "default"
+            applicationIdSuffix ".pp"   // → pixelpenDebug = net.pixelpen.markorplus.pp.dev
             versionName "${defaultConfig.versionName}-${new Date().format('HHmm')}"
             buildConfigField "boolean", "IS_TEST_BUILD", "true"
             buildConfigField "boolean", "IS_PIXELPEN_BUILD", "true"
-            // no app_name override here – release pulls "Markor Plus" from src/main
         }
+
         flavorGplay {
             dimension "default"
             buildConfigField "boolean", "IS_GPLAY_BUILD", "true"
@@ -90,11 +91,16 @@ android {
     }
 
     buildTypes {
-        release {
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
         debug {
+            applicationIdSuffix ".dev"    // <-- ensures pixelpenDebug installs as *.dev
+            versionNameSuffix "-dev"
+            buildConfigField "boolean", "IS_TEST_BUILD", "true"
+            signingConfig signingConfigs.debug
+        }
+        release {
+            // keep whatever you had here; not used right now
+            minifyEnabled false
+            shrinkResources false
         }
     }
 
