@@ -56,6 +56,9 @@ import other.writeily.widget.WrMarkorWidgetProvider;
 
 import android.widget.Toast;
 
+import net.gsantner.markor.util.MarkorContextUtils;
+
+
 public class MainActivity extends MarkorBaseActivity implements GsFileBrowserFragment.FilesystemFragmentOptionsListener {
 
     public static boolean IS_DEBUG_ENABLED = false;
@@ -309,6 +312,9 @@ public class MainActivity extends MarkorBaseActivity implements GsFileBrowserFra
             overridePendingTransition(0, 0);
             startActivity(intent);
         }
+
+        if (_cu == null) { _cu = new net.gsantner.markor.util.MarkorContextUtils(this); }
+
 
         _cu.setKeepScreenOn(this, _appSettings.isKeepScreenOn());
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && _appSettings.isMultiWindowEnabled()) {

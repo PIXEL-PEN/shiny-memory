@@ -56,14 +56,14 @@ android {
             versionName "${defaultConfig.versionName}-${new Date().format('HHmm')}"
             buildConfigField "boolean", "IS_TEST_BUILD", "true"
             buildConfigField "boolean", "IS_PIXELPEN_BUILD", "true"
-            resValue "string", "app_name", "Markor Plus "
+            // no app_name override here
         }
         pixelpen {
             dimension "default"
             versionName "${defaultConfig.versionName}-${new Date().format('HHmm')}"
             buildConfigField "boolean", "IS_TEST_BUILD", "true"
             buildConfigField "boolean", "IS_PIXELPEN_BUILD", "true"
-            resValue "string", "app_name", "PixelPen"
+            // no app_name override here – release pulls "Markor Plus" from src/main
         }
         flavorGplay {
             dimension "default"
