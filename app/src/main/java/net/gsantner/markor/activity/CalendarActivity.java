@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import net.gsantner.markor.util.StorageRoots;
+import net.gsantner.markor.util.NoteTimestamp;
 
 
 public class CalendarActivity extends AppCompatActivity
@@ -464,15 +465,40 @@ public class CalendarActivity extends AppCompatActivity
             Toast.makeText(this, "Please choose a category.", Toast.LENGTH_SHORT).show();
             return;
         }
+// --- FIX: build stamp from selected local DATE + current local TIME ---
+        java.util.Calendar picked = (java.util.Calendar) selectedCalendarDate.clone(); // the day the user picked
+        java.util.TimeZone tz = java.util.TimeZone.getDefault();
+        java.util.Calendar now = java.util.Calendar.getInstance(tz);                  // current local time
 
-        Calendar calendar = selectedCalendarDate;
-        SimpleDateFormat yearFormat = new SimpleDateFormat("yyyy", Locale.getDefault());
-        SimpleDateFormat monthFormat = new SimpleDateFormat("MM_MMMM", Locale.getDefault());
-        SimpleDateFormat timestampFormat = new SimpleDateFormat("EEE. MMMM dd yyyy | h:mm a", Locale.getDefault());
+// Combine: selected Y/M/D + current H:mm, seconds=0 (all in device TZ)
+        java.util.Calendar calendar = java.util.Calendar.getInstance(tz);
+        calendar.clear();
+        calendar.set(
+                picked.get(java.util.Calendar.YEAR),
+                picked.get(java.util.Calendar.MONTH),            // 0-based, OK
+                picked.get(java.util.Calendar.DAY_OF_MONTH),
+                now.get(java.util.Calendar.HOUR_OF_DAY),
+                now.get(java.util.Calendar.MINUTE),
+                0
+        );
+
+// Use the combined calendar for year/month folders and the stamped header
+        java.text.SimpleDateFormat yearFormat = new java.text.SimpleDateFormat("yyyy", java.util.Locale.getDefault());
+        java.text.SimpleDateFormat monthFormat = new java.text.SimpleDateFormat("MM_MMMM", java.util.Locale.getDefault());
+        java.text.SimpleDateFormat timestampFormat = new java.text.SimpleDateFormat("EEE. MMMM dd, yyyy | h:mm a", java.util.Locale.getDefault());
+        yearFormat.setTimeZone(tz);
+        monthFormat.setTimeZone(tz);
+        timestampFormat.setTimeZone(tz);
 
         String year = yearFormat.format(calendar.getTime());
         String month = monthFormat.format(calendar.getTime());
         String timestamp = timestampFormat.format(calendar.getTime());
+// Optional: lowercase AM/PM
+// timestamp = timestamp.replace(" AM"," am").replace(" PM"," pm");
+
+// Optional: make AM/PM lowercase to match your style
+        timestamp = timestamp.replace(" AM", " am").replace(" PM", " pm");
+// --- /FIX ---
 
         // === Use canonical PixelPen root (replaces old Environment/R.string-based root) ===
         File categoryDir = ensureNoteParentDir(category);
