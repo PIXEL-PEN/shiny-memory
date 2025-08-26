@@ -116,23 +116,31 @@ public class FolderTreeAdapter extends RecyclerView.Adapter<FolderTreeAdapter.No
                 }
 
                 if (noteFile != null && noteFile.isFile()) {
-                    // Build FileProvider URI and open via DocumentActivity.launch(Activity, Intent)
-                    Uri fileUri = FileProvider.getUriForFile(
-                            v.getContext(),
-                            BuildConfig.APPLICATION_ID + ".fileprovider",
-                            noteFile
-                    );
+                    String fname = noteFile.getName().toLowerCase(java.util.Locale.ROOT);
+                    boolean isHtml = fname.endsWith(".html") || fname.endsWith(".htm");
 
-                    // Keep mime simple; Markor will handle its own types
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setDataAndType(fileUri, "text/plain");
-                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                    if (isHtml) {
+                        // Open HTML in our FileOpenActivity (explicit component)
+                        // -- HTML path (no direct FileOpenActivity reference) --
+                        android.net.Uri uri = androidx.core.content.FileProvider.getUriForFile(
+                                v.getContext(),
+                                BuildConfig.APPLICATION_ID + ".provider",   // IMPORTANT: .provider (not .fileprovider)
+                                noteFile
+                        );
+                        android.content.Intent i = new android.content.Intent(android.content.Intent.ACTION_VIEW);
+                        i.setDataAndType(uri, "text/html");
+                        i.addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION);
+// Force resolution to THIS app (prevents the original Markor/browser)
+                        i.setPackage(v.getContext().getPackageName());
+                        v.getContext().startActivity(i);
 
-                    if (v.getContext() instanceof android.app.Activity) {
-                        net.gsantner.markor.activity.DocumentActivity.launch(
-                                (android.app.Activity) v.getContext(), intent);
                     } else {
-                        v.getContext().startActivity(intent);
+                        // Open text docs in our DocumentActivity (explicit component)
+                        android.content.Intent i = new android.content.Intent(
+                                v.getContext(), net.gsantner.markor.activity.DocumentActivity.class);
+                        i.putExtra(net.gsantner.markor.model.Document.EXTRA_FILE, noteFile);
+                        i.putExtra(net.gsantner.markor.model.Document.EXTRA_DO_PREVIEW, true);
+                        v.getContext().startActivity(i);
                     }
                 } else {
                     android.widget.Toast.makeText(v.getContext(), "File not found", android.widget.Toast.LENGTH_SHORT).show();

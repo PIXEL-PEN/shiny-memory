@@ -6,7 +6,9 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.Date;
@@ -16,7 +18,22 @@ public class FolderTreeScanner {
 
     // Matches leading numeric prefix like "01_January" or "1-January"
     private static final Pattern LEADING_NUM = Pattern.compile("^(\\d{1,2})[_-].*");
-    private static final Pattern MD_SUFFIX = Pattern.compile("\\.md$", Pattern.CASE_INSENSITIVE);
+
+    // Strip suffix for display names (md/markdown/txt only)
+    private static final Pattern STRIP_SUFFIX =
+            Pattern.compile("\\.(md|markdown|txt)$", Pattern.CASE_INSENSITIVE);
+
+    // Allowed document extensions for the tree (lowercase)
+    private static final Set<String> DOC_EXTS = new HashSet<>();
+    static {
+        // text-ish
+        DOC_EXTS.add("md");
+        DOC_EXTS.add("markdown");
+        DOC_EXTS.add("txt");
+        // html
+        DOC_EXTS.add("html");
+        DOC_EXTS.add("htm");
+    }
 
     // ---- Creation index integration ----
     private static net.gsantner.markor.model.CreationIndex sCreationIndex;
@@ -94,7 +111,7 @@ public class FolderTreeScanner {
             return node;
         }
 
-        // Partition entries to dirs & files; filter hidden/.res/_res and only allow .md files for docs
+        // Partition entries to dirs & files; filter hidden/.res/_res and allow md/markdown/txt/html/htm
         List<File> dirs = new ArrayList<>();
         List<File> docs = new ArrayList<>();
         for (File f : entries) {
@@ -104,11 +121,8 @@ public class FolderTreeScanner {
             }
             if (f.isDirectory()) {
                 dirs.add(f);
-            } else if (f.isFile()) {
-                String lower = name.toLowerCase(Locale.ROOT);
-                if (lower.endsWith(".md")) {
-                    docs.add(f);
-                }
+            } else if (f.isFile() && isDoc(f)) {
+                docs.add(f);
             }
         }
 
@@ -139,9 +153,9 @@ public class FolderTreeScanner {
             node.subfolders.add(child);
         }
 
-        // Attach files (strip ".md" for display)
+        // Attach files
         for (File f : docs) {
-            String displayName = MD_SUFFIX.matcher(f.getName()).replaceAll("");
+            String displayName = renderDisplayName(f.getName());
             node.files.add(new FileNode(displayName, f, depth + 1));
         }
 
@@ -207,5 +221,20 @@ public class FolderTreeScanner {
             }
         }
         return Integer.MAX_VALUE;
+    }
+
+    // -- New helpers for bug #2 --
+
+    private static boolean isDoc(File f) {
+        String name = f.getName().toLowerCase(Locale.ROOT);
+        int dot = name.lastIndexOf('.');
+        if (dot < 0) return false;
+        String ext = name.substring(dot + 1);
+        return DOC_EXTS.contains(ext);
+    }
+
+    /** Strip extension for md/markdown/txt only; keep .html/.htm visible. */
+    private static String renderDisplayName(String fileName) {
+        return STRIP_SUFFIX.matcher(fileName).replaceAll("");
     }
 }
