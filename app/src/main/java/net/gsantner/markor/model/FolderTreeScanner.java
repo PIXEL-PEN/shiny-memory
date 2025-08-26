@@ -16,6 +16,12 @@ import java.util.Locale;
 
 public class FolderTreeScanner {
 
+    // Perf knobs for very large folders
+    private static final int CREATED_SORT_THRESHOLD = 500;   // if more files than this, skip created-time sort
+    private static final int DIR_PREFIX_SORT_THRESHOLD = 400; // if more dirs than this, skip numeric-prefix sort
+
+
+
     // Matches leading numeric prefix like "01_January" or "1-January"
     private static final Pattern LEADING_NUM = Pattern.compile("^(\\d{1,2})[_-].*");
 
@@ -130,7 +136,13 @@ public class FolderTreeScanner {
         sortSubfoldersByPrefix(dirs);
 
         // Sort files by indexed Date Created (newest → oldest), fallback to lastModified if missing
-        Collections.sort(docs, (a, b) -> Long.compare(getIndexedCreated(b), getIndexedCreated(a)));
+        // Sort files: prefer indexed created time (newest → oldest), but switch to fast alpha for huge sets
+        if (docs.size() > CREATED_SORT_THRESHOLD) {
+            // Fast path: avoid getIndexedCreated() calls on every file
+            Collections.sort(docs, (a, b) -> a.getName().compareToIgnoreCase(b.getName()));
+        } else {
+            Collections.sort(docs, (a, b) -> Long.compare(getIndexedCreated(b), getIndexedCreated(a)));
+        }
 
         // Determine if this node is the selected month folder
         boolean thisIsSelectedMonth =
@@ -200,6 +212,12 @@ public class FolderTreeScanner {
     }
 
     private static void sortSubfoldersByPrefix(List<File> dirs) {
+        if (dirs.size() > DIR_PREFIX_SORT_THRESHOLD) {
+            // Fast path: simple alpha sort for huge directories
+            Collections.sort(dirs, (a, b) -> a.getName().compareToIgnoreCase(b.getName()));
+            return;
+        }
+        // Original behavior with leading-number preference
         Collections.sort(dirs, (a, b) -> {
             int na = extractLeadingNumber(a.getName());
             int nb = extractLeadingNumber(b.getName());
@@ -211,6 +229,7 @@ public class FolderTreeScanner {
             return a.getName().compareToIgnoreCase(b.getName());
         });
     }
+
 
     private static int extractLeadingNumber(String name) {
         Matcher m = LEADING_NUM.matcher(name);
