@@ -43,8 +43,6 @@ public class FolderTreeScanner {
         });
     }
 
-
-
     // Matches leading numeric prefix like "01_January" or "1-January"
     private static final Pattern LEADING_NUM = Pattern.compile("^(\\d{1,2})[_-].*");
 
@@ -100,7 +98,7 @@ public class FolderTreeScanner {
      *
      * @param root             the Markor root folder (e.g., /Documents/markor default)
      * @param selectedCategory e.g., "General"
-     * @param selectedMonth    e.g., "08_August" (case-insensitive compare)
+     * @param selectedMonth    e.g., "08_July", "July", "Jul", "07", "7", "July 2025", "2025-07"
      */
     public static FolderNode scan(File root, String selectedCategory, String selectedMonth) {
         if (root == null || !root.exists() || !root.isDirectory()) {
@@ -124,7 +122,7 @@ public class FolderTreeScanner {
      * @param dir               current directory
      * @param depth             0=root, 1=year, 2=month, 3=category, ...
      * @param selectedCategory  category name to expand inside the selectedMonth
-     * @param selectedMonth     month folder name like "08_August"
+     * @param selectedMonth     month indicator (see scan() javadoc)
      * @param monthMatchedAbove true if an ancestor already matched the selectedMonth
      */
     private static FolderNode scanRecursive(File dir,
@@ -163,7 +161,7 @@ public class FolderTreeScanner {
             sortSubfoldersByPrefix(dirs);
         }
 
-// Sort files: prefer indexed created time (newest → oldest), but switch to fast alpha for huge sets
+        // Sort files: prefer indexed created time (newest → oldest), but switch to fast alpha for huge sets
         if (docs.size() > CREATED_SORT_THRESHOLD) {
             // Fast path: avoid getIndexedCreated() calls on every file
             Collections.sort(docs, (a, b) -> a.getName().compareToIgnoreCase(b.getName()));
@@ -171,12 +169,8 @@ public class FolderTreeScanner {
             Collections.sort(docs, (a, b) -> Long.compare(getIndexedCreated(b), getIndexedCreated(a)));
         }
 
-
-        // Determine if this node is the selected month folder
-        boolean thisIsSelectedMonth =
-                (selectedMonth != null)
-                        && depth == 2
-                        && equalsIgnoreCaseSafe(dir.getName(), selectedMonth);
+        // Determine if this node is the selected month folder (robust match)
+        boolean thisIsSelectedMonth = (depth == 2) && monthMatches(dir.getName(), selectedMonth);
 
         // Recurse into children
         for (File d : dirs) {
@@ -228,7 +222,7 @@ public class FolderTreeScanner {
     private static boolean containsMonth(FolderNode yearNode, String selectedMonth) {
         if (selectedMonth == null) return false;
         for (FolderNode m : yearNode.subfolders) {
-            if (equalsIgnoreCaseSafe(m.name, selectedMonth)) {
+            if (monthMatches(m.name, selectedMonth)) {
                 return true;
             }
         }
@@ -237,6 +231,52 @@ public class FolderTreeScanner {
 
     private static boolean equalsIgnoreCaseSafe(String a, String b) {
         return a != null && b != null && a.equalsIgnoreCase(b);
+    }
+
+    /** Match month folder by many common inputs: "07_July", "July", "Jul", "07", "7", "July 2025", "2025-07", "07/2025". */
+    private static boolean monthMatches(String folderName, String selectedMonth) {
+        if (selectedMonth == null) return false;
+
+        String folder = folderName.toLowerCase(Locale.ROOT);
+        String sel = selectedMonth.toLowerCase(Locale.ROOT).trim();
+
+        // Exact match
+        if (folder.equals(sel)) return true;
+
+        // Get suffix "July" from "07_July" (or no underscore -> whole name)
+        int us = folder.indexOf('_');
+        String suffix = (us >= 0 && us < folder.length() - 1) ? folder.substring(us + 1) : folder;
+
+        // Abbrev (Jul), and numeric (07 / 7) from folder
+        String abbrev = suffix.length() >= 3 ? suffix.substring(0, 3) : suffix;
+        int monthNum = monthNumberFromName(suffix); // 1..12 or -1
+        String mm = (monthNum > 0) ? String.format(Locale.ROOT, "%02d", monthNum) : "";
+        String m = (monthNum > 0) ? Integer.toString(monthNum) : "";
+
+        // Accept if selectedMonth contains any reasonable token
+        if (!suffix.isEmpty() && (sel.equals(suffix) || sel.contains(suffix))) return true;
+        if (!abbrev.isEmpty() && (sel.equals(abbrev) || sel.contains(abbrev))) return true;
+        if (!mm.isEmpty() && (sel.equals(mm) || sel.contains("-" + mm) || sel.contains("/" + mm) || sel.contains(mm + "/") || sel.contains(mm + "-"))) return true;
+        if (!m.isEmpty()  && (sel.equals(m)  || sel.contains("-" + m)  || sel.contains("/" + m)  || sel.contains(m + "/")  || sel.contains(m + "-")))  return true;
+
+        return false;
+    }
+
+    private static int monthNumberFromName(String nameLower) {
+        String n = nameLower.toLowerCase(Locale.ROOT);
+        if (n.startsWith("jan")) return 1;
+        if (n.startsWith("feb")) return 2;
+        if (n.startsWith("mar")) return 3;
+        if (n.startsWith("apr")) return 4;
+        if (n.startsWith("may")) return 5;
+        if (n.startsWith("jun")) return 6;
+        if (n.startsWith("jul")) return 7;
+        if (n.startsWith("aug")) return 8;
+        if (n.startsWith("sep")) return 9;
+        if (n.startsWith("oct")) return 10;
+        if (n.startsWith("nov")) return 11;
+        if (n.startsWith("dec")) return 12;
+        return -1;
     }
 
     private static void sortSubfoldersByPrefix(List<File> dirs) {
@@ -257,7 +297,6 @@ public class FolderTreeScanner {
             return a.getName().compareToIgnoreCase(b.getName());
         });
     }
-
 
     private static int extractLeadingNumber(String name) {
         Matcher m = LEADING_NUM.matcher(name);

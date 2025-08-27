@@ -199,8 +199,20 @@ public class FolderBrowserActivity extends Activity {
         );
 
         new Thread(() -> {
-            FolderNode tree = FolderTreeScanner.scan(rf, cat, mon);
-            String html = buildHtml(tree, cat, mon);
+            FolderNode tree = FolderTreeScanner.scan(
+                    rf, cat,
+                    (mon != null && !mon.trim().isEmpty())
+                            ? mon
+                            : new java.text.SimpleDateFormat("MMMM", java.util.Locale.ENGLISH).format(new java.util.Date())
+            );
+
+            String html = buildHtml(
+                    tree, cat,
+                    (mon != null && !mon.trim().isEmpty())
+                            ? mon
+                            : new java.text.SimpleDateFormat("MMMM", java.util.Locale.ENGLISH).format(new java.util.Date())
+            );
+
             runOnUiThread(() -> {
                 if (!isFinishing()) {
                     webView.loadDataWithBaseURL(null, html, "text/html", "utf-8", null);
