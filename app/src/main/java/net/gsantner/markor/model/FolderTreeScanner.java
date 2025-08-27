@@ -17,8 +17,31 @@ import java.util.Locale;
 public class FolderTreeScanner {
 
     // Perf knobs for very large folders
-    private static final int CREATED_SORT_THRESHOLD = 500;   // if more files than this, skip created-time sort
-    private static final int DIR_PREFIX_SORT_THRESHOLD = 400; // if more dirs than this, skip numeric-prefix sort
+    private static final int CREATED_SORT_THRESHOLD = 500;
+    private static final int DIR_PREFIX_SORT_THRESHOLD = 400;
+
+    // Single-thread executor for background scans
+    private static final java.util.concurrent.ExecutorService EXEC =
+            java.util.concurrent.Executors.newSingleThreadExecutor();
+
+    // Simple callback interface
+    public interface TreeCallback { void onResult(FolderNode node); }
+
+    /** Run scan() off the UI thread and post result back to the main thread. */
+    public static void scanAsync(final java.io.File root,
+                                 final String selectedCategory,
+                                 final String selectedMonth,
+                                 final android.os.Handler uiHandler,
+                                 final TreeCallback cb) {
+        EXEC.submit(new Runnable() {
+            @Override public void run() {
+                final FolderNode tree = scan(root, selectedCategory, selectedMonth);
+                uiHandler.post(new Runnable() {
+                    @Override public void run() { cb.onResult(tree); }
+                });
+            }
+        });
+    }
 
 
 
@@ -132,17 +155,22 @@ public class FolderTreeScanner {
             }
         }
 
-        // Sort directories: first by leading numeric prefix (01..12), fallback alpha
-        sortSubfoldersByPrefix(dirs);
+        // Sort directories: prefer numeric prefix, but use fast alpha for huge directories
+        if (dirs.size() > DIR_PREFIX_SORT_THRESHOLD) {
+            // Fast path for many subfolders
+            Collections.sort(dirs, (a, b) -> a.getName().compareToIgnoreCase(b.getName()));
+        } else {
+            sortSubfoldersByPrefix(dirs);
+        }
 
-        // Sort files by indexed Date Created (newest → oldest), fallback to lastModified if missing
-        // Sort files: prefer indexed created time (newest → oldest), but switch to fast alpha for huge sets
+// Sort files: prefer indexed created time (newest → oldest), but switch to fast alpha for huge sets
         if (docs.size() > CREATED_SORT_THRESHOLD) {
             // Fast path: avoid getIndexedCreated() calls on every file
             Collections.sort(docs, (a, b) -> a.getName().compareToIgnoreCase(b.getName()));
         } else {
             Collections.sort(docs, (a, b) -> Long.compare(getIndexedCreated(b), getIndexedCreated(a)));
         }
+
 
         // Determine if this node is the selected month folder
         boolean thisIsSelectedMonth =
