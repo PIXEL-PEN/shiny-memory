@@ -20,8 +20,12 @@ Typical uses:
 
 * **Calendar Input UI (via FAB)**
   Pick a **Category**, enter or dictate a **Note Title**, tap **Submit**. A new note opens with a **date-stamp at the top-left**; add body content or just back out if the title suffices. **Reset** clears the title and resets the date to **today**.
-* **Folder Tree (WebView)**
-  Accordion navigation: **Year → Month → Category → Notes**. Notes show their **title without file suffix**. Sorted by **creation chronology** (stable “newest → oldest”), not by last modified time.
+- **Folder Tree (WebView)**
+  - Accordion navigation: **Year → Month → Category → Notes**.
+  - Notes show their **title without file suffix**.
+  - Sorted by **creation chronology** (stable “newest → oldest”), not by last modified time.
+  - **Doc icon badges for long-title notes (>120 chars):** ○ hollow dot = **title-only** (no body); ● filled **red** dot = **has body content**.
+
 * **Auto-creation of folders**
   Missing **Year/Month/Category** directories are created on submit.
 * **Category management (prototype)**
@@ -96,3 +100,4 @@ TBD (likely **Apache-2.0** to align with Markor; confirm before first public rel
 ## Acknowledgments
 
 Built on the excellent Markor project and community. Thanks to early testers who helped stabilize creation-time chronology and category flows.
+
