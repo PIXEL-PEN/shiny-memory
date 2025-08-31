@@ -14,10 +14,8 @@ import java.util.regex.Pattern;
 import java.util.Date;
 import java.util.Locale;
 
-import android.content.Context;
 import net.gsantner.markor.ApplicationObject;
 import net.gsantner.markor.util.CreationIndex;
-
 
 public class FolderTreeScanner {
 
@@ -29,14 +27,23 @@ public class FolderTreeScanner {
     private static final java.util.concurrent.ExecutorService EXEC =
             java.util.concurrent.Executors.newSingleThreadExecutor();
 
-    // Phase 1: central place to fetch "created" (indexed or inferred)
-    private long getIndexedCreated(final java.io.File file) {
-        if (file == null) return 0L;
-        final Context ctx = ApplicationObject.getAppContext();
-        // CreationIndex lazily infers via NIO creationTime -> lastModified, and caches
-        return CreationIndex.get(ctx).getOrInfer(file);
+    // Back-compat: older callers used to set an index instance. We now access CreationIndex statically.
+    // Keep these no-ops so existing call sites still compile.
+    @Deprecated
+    public static void setCreationIndex(CreationIndex unused) {
+        // no-op
+    }
+    @Deprecated
+    public static void setCreationIndex(net.gsantner.markor.model.CreationIndex unused) {
+        // no-op
     }
 
+    // Phase 1: central place to fetch "created" (indexed or inferred)
+    private static long getIndexedCreated(final java.io.File file) {
+        if (file == null) return 0L;
+        // CreationIndex lazily infers via NIO creationTime -> lastModified, and caches
+        return CreationIndex.get(ApplicationObject.get()).getOrInfer(file);
+    }
 
     // Simple callback interface
     public interface TreeCallback { void onResult(FolderNode node); }
@@ -76,35 +83,11 @@ public class FolderTreeScanner {
         DOC_EXTS.add("htm");
     }
 
-    // ---- Creation index integration ----
-    private static net.gsantner.markor.model.CreationIndex sCreationIndex;
-
-    public static void setCreationIndex(net.gsantner.markor.model.CreationIndex idx) {
-        sCreationIndex = idx;
-    }
-
     // Skip marker helper
     private static boolean shouldSkipDir(java.io.File dir) {
         return new java.io.File(dir, ".nomedia").exists()
                 || new java.io.File(dir, ".skip-scan").exists();
     }
-
-    /**
-     * Lookup stable "created" time; lazily backfill (one-time) when missing.
-     */
-    private static long getIndexedCreated(File f) {
-        if (sCreationIndex != null) {
-            Long v = sCreationIndex.get(f);
-            if (v != null && v > 0L) {
-                return v;
-            }
-            long created = f.lastModified();
-            sCreationIndex.put(f, created);
-            return created;
-        }
-        return f.lastModified();
-    }
-    // ---- /Creation index integration ----
 
     /**
      * Public entry: scan the tree and mark expansions so UI can show
@@ -122,9 +105,6 @@ public class FolderTreeScanner {
         FolderNode tree = scanRecursive(root, 0, selectedCategory, selectedMonth, false);
         if (tree != null) {
             tree.expanded = true;
-        }
-        if (sCreationIndex != null) {
-            sCreationIndex.save();
         }
         return tree;
     }
@@ -174,13 +154,12 @@ public class FolderTreeScanner {
             sortSubfoldersByPrefix(dirs);
         }
 
-// Sort files: prefer indexed created time (newest → oldest), but switch to fast alpha for huge sets
+        // Sort files: prefer indexed created time (newest → oldest), but switch to fast alpha for huge sets
         if (docs.size() > CREATED_SORT_THRESHOLD) {
             Collections.sort(docs, (a, b) -> a.getName().compareToIgnoreCase(b.getName()));
         } else {
             Collections.sort(docs, (a, b) -> Long.compare(getIndexedCreated(b), getIndexedCreated(a)));
         }
-
 
         // Determine if this node is the selected month folder (robust match)
         boolean thisIsSelectedMonth = (depth == 2) && monthMatches(dir.getName(), selectedMonth);
@@ -321,8 +300,6 @@ public class FolderTreeScanner {
         }
         return Integer.MAX_VALUE;
     }
-
-    // -- New helpers for bug #2 --
 
     private static boolean isDoc(File f) {
         String name = f.getName().toLowerCase(Locale.ROOT);
