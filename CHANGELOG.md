@@ -1,4 +1,4 @@
-# Markor Plus — Changelog (branch: markor-plus-v1.2.6)
+﻿# Markor Plus â€” Changelog (branch: markor-plus-v1.2.6)
 
 This changelog is specific to the **Markor Plus** module on this branch.
 For the full module history, see: [docs/markor-plus/CHANGELOG.md](docs/markor-plus/CHANGELOG.md)
@@ -20,8 +20,9 @@ For the full module history, see: [docs/markor-plus/CHANGELOG.md](docs/markor-pl
 - Image-import optimization groundwork (candidate for separate upstream PR).
 
 ### Known limitations
-- Rename/move/copy handled via Markor’s native browser.
+- Rename/move/copy handled via Markorâ€™s native browser.
 - Very large archives may still impact scanning; `.nomedia` or `.skip-scan` can mitigate.
 - Root paths vary across devices; no automated migration yet.
 - Accessibility/i18n and small-screen polish ongoing.
 - CalendarView quirk: browsing to other months in the Folder Tree reflects correctly only after a day is selected. Future updates will evaluate third-party calendars to remove this quirk.
+
