@@ -14,6 +14,11 @@ import java.util.regex.Pattern;
 import java.util.Date;
 import java.util.Locale;
 
+import android.content.Context;
+import net.gsantner.markor.ApplicationObject;
+import net.gsantner.markor.util.CreationIndex;
+
+
 public class FolderTreeScanner {
 
     // Perf knobs for very large folders
@@ -23,6 +28,15 @@ public class FolderTreeScanner {
     // Single-thread executor for background scans
     private static final java.util.concurrent.ExecutorService EXEC =
             java.util.concurrent.Executors.newSingleThreadExecutor();
+
+    // Phase 1: central place to fetch "created" (indexed or inferred)
+    private long getIndexedCreated(final java.io.File file) {
+        if (file == null) return 0L;
+        final Context ctx = ApplicationObject.getAppContext();
+        // CreationIndex lazily infers via NIO creationTime -> lastModified, and caches
+        return CreationIndex.get(ctx).getOrInfer(file);
+    }
+
 
     // Simple callback interface
     public interface TreeCallback { void onResult(FolderNode node); }
@@ -155,19 +169,18 @@ public class FolderTreeScanner {
 
         // Sort directories: prefer numeric prefix, but use fast alpha for huge directories
         if (dirs.size() > DIR_PREFIX_SORT_THRESHOLD) {
-            // Fast path for many subfolders
             Collections.sort(dirs, (a, b) -> a.getName().compareToIgnoreCase(b.getName()));
         } else {
             sortSubfoldersByPrefix(dirs);
         }
 
-        // Sort files: prefer indexed created time (newest → oldest), but switch to fast alpha for huge sets
+// Sort files: prefer indexed created time (newest → oldest), but switch to fast alpha for huge sets
         if (docs.size() > CREATED_SORT_THRESHOLD) {
-            // Fast path: avoid getIndexedCreated() calls on every file
             Collections.sort(docs, (a, b) -> a.getName().compareToIgnoreCase(b.getName()));
         } else {
             Collections.sort(docs, (a, b) -> Long.compare(getIndexedCreated(b), getIndexedCreated(a)));
         }
+
 
         // Determine if this node is the selected month folder (robust match)
         boolean thisIsSelectedMonth = (depth == 2) && monthMatches(dir.getName(), selectedMonth);
