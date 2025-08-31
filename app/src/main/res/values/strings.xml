@@ -494,6 +494,8 @@
         <string name="app_name">Markor Plus</string>
         <string name="app_name_real" translatable="false">@string/app_name</string>
 
+        <string name="meta_created_modified">Created %1$s • Modified %2$s</string>
+
         <string-array name="category_list">
             <item>General</item>
             <item>Projects</item>

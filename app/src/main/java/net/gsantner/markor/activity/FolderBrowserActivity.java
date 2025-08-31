@@ -236,7 +236,7 @@ public class FolderBrowserActivity extends Activity {
                 .append(".dot-flag.empty { background:transparent; border:1px solid #d35400; }")
                 .append(".note-title { font-size: 17px; font-weight: 500; margin-left:2px; }")
                 .append(".note-meta  { font-size: 12px; color: #6e6e6e; margin-left: 0; white-space: nowrap; display: block; }")
-                .append(".note-meta span.sep { padding: 0 2px; }")
+                .append(".note-meta span.sep { padding: 0 .07px; }")
                 .append(".year { font-size: 19px; font-weight: bold; }")
                 .append(".month { font-size: 18px; font-weight: bold; }")
                 .append(".category { font-size: 16px; font-weight: bold; }")
@@ -293,23 +293,38 @@ public class FolderBrowserActivity extends Activity {
         String fileIndent = "margin-left: " + ((depth * 20) + 20) + "px;";
 
         for (FileNode file : folder.files) {
-            // Compact caption: Created d MMM | yy • Modified d MMM | yy
             final long created  = CreationIndex.get(this).getOrInfer(file.file);
             final long modified = file.file.lastModified();
 
-            final java.text.SimpleDateFormat sdfDM =
-                    new java.text.SimpleDateFormat("d MMM", java.util.Locale.getDefault());
-            final java.text.SimpleDateFormat sdfYY =
-                    new java.text.SimpleDateFormat("yy",     java.util.Locale.getDefault());
+            final java.text.SimpleDateFormat sdfWk =
+                    new java.text.SimpleDateFormat("EEE", java.util.Locale.getDefault());
+            final java.text.SimpleDateFormat sdfDay =
+                    new java.text.SimpleDateFormat("d",   java.util.Locale.getDefault());
+            final java.text.SimpleDateFormat sdfMon =
+                    new java.text.SimpleDateFormat("MMM", java.util.Locale.getDefault());
+            final java.text.SimpleDateFormat sdfYr  =
+                    new java.text.SimpleDateFormat("yy",  java.util.Locale.getDefault());
 
-            final String cShort = sdfDM.format(new java.util.Date(created))
-                    + " <span class='sep'>|</span> " + sdfYY.format(new java.util.Date(created));
-            final String mShort = sdfDM.format(new java.util.Date(modified))
-                    + " <span class='sep'>|</span> " + sdfYY.format(new java.util.Date(modified));
+            final long EPS_MS = 60_000L; // >1 min = meaningfully later
 
-            final String dateStr = "<div class='note-meta'>Created " + cShort
-                    + " <span class='sep'>•</span> Modified " + mShort + "</div>";
+            String cShort = sdfWk.format(new java.util.Date(created))
+                    + " <span class='sep'>|</span> " + sdfDay.format(new java.util.Date(created))
+                    + " " + sdfMon.format(new java.util.Date(created))
+                    + " <span class='sep'>|</span> " + sdfYr.format(new java.util.Date(created));
 
+            String dateStr;
+            if ((modified - created) > EPS_MS) {
+                String mShort = sdfWk.format(new java.util.Date(modified))
+                        + " <span class='sep'>|</span> " + sdfDay.format(new java.util.Date(modified))
+                        + " " + sdfMon.format(new java.util.Date(modified))
+                        + " <span class='sep'>|</span> " + sdfYr.format(new java.util.Date(modified));
+                dateStr = "<div class='note-meta'>" + cShort
+                        + " <span class='sep'>•</span> " + mShort + "</div>";
+            } else {
+                dateStr = "<div class='note-meta'>" + cShort + "</div>";
+            }
+
+            // --- icon/title helpers ---
             String baseName = file.name.replaceAll("\\.md$", "");
             boolean isLongTitle = baseName.length() >= TITLE_LEN_THRESHOLD;
             boolean substantial =
