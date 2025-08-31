@@ -57,6 +57,9 @@ import java.util.List;
 
 import other.de.stanetz.jpencconverter.JavaPasswordbasedCryption;
 
+import net.gsantner.markor.util.CreationIndex;
+
+
 public class NewFileDialog extends DialogFragment {
     public static final String FRAGMENT_TAG = NewFileDialog.class.getName();
     public static final String EXTRA_DIR = "EXTRA_DIR";
@@ -300,6 +303,13 @@ public class NewFileDialog extends DialogFragment {
 
             if (!file.exists() || file.length() <= GsContextUtils.TEXTFILE_OVERWRITE_MIN_TEXT_LENGTH) {
                 document.saveContent(activity, content.first, cu, true);
+
+                // Phase 1: record created timestamp for this brand-new note (idempotent)
+                final CreationIndex idx = CreationIndex.get(requireContext());
+                if (!idx.has(file)) {
+                    idx.putNow(file);
+                }
+
 
                 // We only make these changes if the file did not already exist
                 appSettings.setDocumentFormat(document.path, fmt.format);

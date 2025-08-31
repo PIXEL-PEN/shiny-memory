@@ -41,6 +41,9 @@ import java.io.File;
 
 import other.so.AndroidBug5497Workaround;
 
+import net.gsantner.markor.util.CreationIndex;
+
+
 public class DocumentActivity extends MarkorBaseActivity {
 
     private Toolbar _toolbar;
