@@ -59,18 +59,6 @@ A **FAB** launches the Calendar Input screen; a **browser icon** opens the Folde
 * Accessibility, internationalization, and small-screen polish are ongoing.
 * **CalendarView quirk:** browsing to other months in the Folder Tree reflects correctly **only after a day is selected** in the calendar. This is a limitation of Android’s stock `CalendarView`.
 
-## Roadmap / ideas
-
-* Safe inline **rename/move** from Folder Tree (with undo).
-* Richer **category editor** (ordering, icons, color).
-* Search/filter within **year/month/category**.
-* Export to **printable/interactive timeline PDF**.
-* Tests to guarantee **creation-chronology** behavior.
-* Performance: incremental scanning, caching, “open at current path” defaults.
-* **Calendar upgrade:** evaluate more customizable third-party calendars (e.g., MaterialCalendarView, Kizitonwose) to replace/augment `CalendarView` and remove the “select a day” quirk.
-* **Year Overview** module with grid layout (see standalone HTML version)
-  
-
 ## Building / running (for collaborators)
 
 Lives as an **add-on module inside a Markor fork**.
@@ -96,6 +84,24 @@ Notes are plain files in local storage. No analytics or tracking. Permissions ar
 ![Category expanded within month](docs/screenshots/category_expand.jpg)
 ![Input field with keyboard](docs/screenshots/input_field_keyboard.jpg)
 
+## Roadmap / ideas
+
+* Safe inline **rename/move** from Folder Tree (with undo).
+* Richer **category editor** (ordering, icons, color).
+* Search/filter within **year/month/category**.
+* Export to **printable/interactive timeline PDF**.
+* Tests to guarantee **creation-chronology** behavior.
+* Performance: incremental scanning, caching, “open at current path” defaults.
+* **Calendar upgrade:** evaluate more customizable third-party calendars (e.g., MaterialCalendarView, Kizitonwose) to replace/augment `CalendarView` and remove the “select a day” quirk.
+* Better integration with Markor's native screen layouts including top and bottom bar menus.
+* **Year Overview** module with grid layout.
+
+  ![Year overview (phone)](https://github.com/user-attachments/assets/fad0559d-8d80-41dd-b422-48c9894179c5)
+
+  
+
+
+
 
 ## License
 
@@ -104,6 +110,7 @@ TBD (likely **Apache-2.0** to align with Markor; confirm before first public rel
 ## Acknowledgments
 
 Built on the excellent Markor project and community. Thanks to Harshad Vedartham harshad1 for HTML applet inspiration. 
+
 
 
 
