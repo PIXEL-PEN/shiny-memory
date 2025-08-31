@@ -24,9 +24,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
+
+import android.text.format.DateUtils;
+import net.gsantner.markor.util.CreationIndex;
 
 public class FolderBrowserActivity extends Activity {
 
@@ -67,8 +67,7 @@ public class FolderBrowserActivity extends Activity {
         TextView title = findViewById(R.id.title_text);
         if (title != null) title.setText("› Browser Tree");
 
-        net.gsantner.markor.model.CreationIndex cidx = new net.gsantner.markor.model.CreationIndex(this);
-        net.gsantner.markor.model.FolderTreeScanner.setCreationIndex(cidx);
+        // Legacy explicit CreationIndex wiring is no longer required.
 
         webView = findViewById(R.id.folder_browser_webview);
         WebSettings webSettings = webView.getSettings();
@@ -118,8 +117,8 @@ public class FolderBrowserActivity extends Activity {
                         View focused = getCurrentFocus();
                         if (focused != null) focused.clearFocus();
                         if (webView != null) webView.clearFocus();
-                        android.view.inputmethod.InputMethodManager imm =
-                                (android.view.inputmethod.InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                        InputMethodManager imm =
+                                (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
                         if (imm != null) {
                             View anchor = (focused != null) ? focused : webView;
                             if (anchor != null) imm.hideSoftInputFromWindow(anchor.getWindowToken(), 0);
@@ -131,8 +130,8 @@ public class FolderBrowserActivity extends Activity {
 
                     if (target != null && target.exists()) {
                         Intent intent = new Intent(FolderBrowserActivity.this, net.gsantner.markor.activity.DocumentActivity.class);
-                        intent.putExtra(net.gsantner.markor.model.Document.EXTRA_FILE, target);
-                        intent.putExtra(net.gsantner.markor.model.Document.EXTRA_DO_PREVIEW, true);
+                        intent.putExtra(Document.EXTRA_FILE, target);
+                        intent.putExtra(Document.EXTRA_DO_PREVIEW, true);
                         intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                         startActivity(intent);
                         overridePendingTransition(0, 0);
@@ -221,7 +220,6 @@ public class FolderBrowserActivity extends Activity {
         }).start();
     }
 
-
     private String buildHtml(FolderNode root, String selectedCategory, String selectedMonth) {
         StringBuilder sb = new StringBuilder();
         sb.append("<html><head>")
@@ -295,18 +293,21 @@ public class FolderBrowserActivity extends Activity {
         }
 
         String fileIndent = "margin-left: " + ((depth * 20) + 20) + "px;";
-        SimpleDateFormat sdfWk = new SimpleDateFormat("EEE", Locale.getDefault());
-        SimpleDateFormat sdfDay = new SimpleDateFormat("d",   Locale.getDefault());
-        SimpleDateFormat sdfMon = new SimpleDateFormat("MMM", Locale.getDefault());
-        SimpleDateFormat sdfYr  = new SimpleDateFormat("yy",  Locale.getDefault());
 
         for (FileNode file : folder.files) {
-            Date t = new Date(file.file.lastModified());
-            String dateStr = "<div class='note-meta'>"
-                    + sdfWk.format(t) + "<span class='sep'>|</span>"
-                    + sdfDay.format(t) + " " + sdfMon.format(t) + "<span class='sep'>|</span>"
-                    + sdfYr.format(t)
-                    + "</div>";
+            // Created & Modified captions (Created first)
+            final long created  = CreationIndex.get(this).getOrInfer(file.file);
+            final long modified = file.file.lastModified();
+
+            final int flags = DateUtils.FORMAT_SHOW_DATE
+                    | DateUtils.FORMAT_SHOW_TIME
+                    | DateUtils.FORMAT_ABBREV_MONTH;
+
+            final String createdStr  = DateUtils.formatDateTime(this, created,  flags);
+            final String modifiedStr = DateUtils.formatDateTime(this, modified, flags);
+
+            String dateStr = "<div class='note-meta'>Created " + createdStr
+                    + " <span class='sep'>•</span> Modified " + modifiedStr + "</div>";
 
             String baseName = file.name.replaceAll("\\.md$", "");
             boolean isLongTitle = baseName.length() >= TITLE_LEN_THRESHOLD;
