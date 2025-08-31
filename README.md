@@ -109,7 +109,11 @@ TBD (likely **Apache-2.0** to align with Markor; confirm before first public rel
 
 ## Acknowledgments
 
-Built on the excellent Markor project and community. Thanks to Harshad Vedartham harshad1 for HTML applet inspiration. 
+Built on the excellent Markor project and community. ## Acknowledgments
+
+Inspired by [@harshad1](https://github.com/harshad1)’s HTML calendar prototype for Markor — see the original discussion:  
+https://github.com/gsantner/markor/discussions/2278
+
 
 
 
