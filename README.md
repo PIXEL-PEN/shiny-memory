@@ -88,10 +88,12 @@ Notes are plain files in local storage. No analytics or tracking. Permissions ar
 
 ## Screenshots
 
-(Add images under `docs/` and reference them here once ready.)
+![Folder Tree browser](docs/screenshots/browser_tree.jpg)
+![Category picker (spinner)](docs/screenshots/spinner.jpg)
+![Calendar view](docs/screenshots/calendar_view.jpg)
+![Category expanded within month](docs/screenshots/category_expand.jpg)
+![Input field with keyboard](docs/screenshots/input_field_keyboard.jpg)
 
-* Calendar Input — *placeholder*
-* Folder Tree (Year → Month → Category → Notes) — *placeholder*
 
 ## License
 
@@ -100,6 +102,7 @@ TBD (likely **Apache-2.0** to align with Markor; confirm before first public rel
 ## Acknowledgments
 
 Built on the excellent Markor project and community. Thanks to Harshad Vedartham harshad1 for HTML applet inspiration. 
+
 
 
 
