@@ -99,6 +99,7 @@ TBD (likely **Apache-2.0** to align with Markor; confirm before first public rel
 
 ## Acknowledgments
 
-Built on the excellent Markor project and community. Thanks to early testers who helped stabilize creation-time chronology and category flows.
+Built on the excellent Markor project and community. Thanks to Harshad Vedartham harshad1 for HTML applet inspiration. 
+
 
 
