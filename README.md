@@ -68,6 +68,8 @@ A **FAB** launches the Calendar Input screen; a **browser icon** opens the Folde
 * Tests to guarantee **creation-chronology** behavior.
 * Performance: incremental scanning, caching, “open at current path” defaults.
 * **Calendar upgrade:** evaluate more customizable third-party calendars (e.g., MaterialCalendarView, Kizitonwose) to replace/augment `CalendarView` and remove the “select a day” quirk.
+* Year Overview module with grid layout (see standalone HTML version)
+* 
 
 ## Building / running (for collaborators)
 
@@ -102,6 +104,7 @@ TBD (likely **Apache-2.0** to align with Markor; confirm before first public rel
 ## Acknowledgments
 
 Built on the excellent Markor project and community. Thanks to Harshad Vedartham harshad1 for HTML applet inspiration. 
+
 
 
 
