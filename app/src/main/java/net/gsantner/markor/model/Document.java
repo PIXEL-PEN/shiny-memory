@@ -43,6 +43,9 @@ import java.util.Locale;
 
 import other.de.stanetz.jpencconverter.JavaPasswordbasedCryption;
 
+import net.gsantner.markor.util.CreationIndex;
+
+
 @SuppressWarnings({"WeakerAccess", "UnusedReturnValue", "unused", "UnnecessaryLocalVariable"})
 public class Document implements Serializable {
     private static final int MAX_TITLE_EXTRACTION_LENGTH = 25;
