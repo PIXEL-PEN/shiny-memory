@@ -28,7 +28,7 @@ Format inspired by Keep a Changelog. Semantic versioning is pre-1.0.
 - Creation-time chronology preserved: editing a note no longer bumps its position.
 
 ### Performance
-- Image-import optimization groundwork (candidate for separate upstream PR; benchmarks to follow).
+- Image-import optimization (limited to 1024px) groundwork (candidate for separate upstream PR; benchmarks to follow).
 
 ### Known limitations
 - Rename/move/copy is handled via Markor’s native browser.
@@ -36,6 +36,14 @@ Format inspired by Keep a Changelog. Semantic versioning is pre-1.0.
 - Root paths vary across devices; no automated migration yet.
 - Accessibility/i18n and small-screen polish ongoing.
 - **CalendarView quirk:** browsing to other months in the Folder Tree reflects correctly **only after a day is selected** in the calendar (stock `CalendarView` limitation). Future updates will evaluate third-party calendars to remove this quirk.
+
+### Known issues
+- Intermittent incorrect **datestamp** on new notes. 
+  **Symptoms:** date can be off by ±1 day or time not matching exact local time.  
+  **Workaround:** tap/select Reset, then create the note.  
+  **Scope:** likely CalendarView selection ↔ system clock combine edge case.  
+ 
+
 
 ---
 
