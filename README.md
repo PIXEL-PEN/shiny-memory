@@ -1,6 +1,6 @@
 # Markor Plus (prototype)
 
-**TL;DR:** Markor Plus is an add-on for the open-source Markor note app that adds a **Yearly Journal Organizer**: a quick **Calendar Input** to create notes and a **Folder Tree** to browse notes by **Year → Month → Category → Note** with stable chronological context.
+ Markor Plus is an add-on for the open-source Markor note app that adds a **Yearly Journal Organizer**: a quick **Calendar Input** to create notes and a **Folder Tree** to browse notes by **Year → Month → Category → Note** with stable chronological context.
 
 **Status:** early prototype. Expect rough edges. Feedback and PRs welcome.
 
@@ -100,4 +100,5 @@ TBD (likely **Apache-2.0** to align with Markor; confirm before first public rel
 ## Acknowledgments
 
 Built on the excellent Markor project and community. Thanks to early testers who helped stabilize creation-time chronology and category flows.
+
 
