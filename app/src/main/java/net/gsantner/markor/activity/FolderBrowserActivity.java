@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 
+// Keep if used elsewhere; harmless if unused
 import android.text.format.DateUtils;
 import net.gsantner.markor.util.CreationIndex;
 
@@ -38,7 +39,6 @@ public class FolderBrowserActivity extends Activity {
     private WebView webView;
     private File rootFolder;
 
-    // [onCreate] FolderBrowserActivity — revert to first Loading… iteration (async scan, full hierarchy)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,8 +66,6 @@ public class FolderBrowserActivity extends Activity {
         if (backBtn != null) backBtn.setOnClickListener(v -> finish());
         TextView title = findViewById(R.id.title_text);
         if (title != null) title.setText("› Browser Tree");
-
-        // Legacy explicit CreationIndex wiring is no longer required.
 
         webView = findViewById(R.id.folder_browser_webview);
         WebSettings webSettings = webView.getSettings();
@@ -295,19 +293,22 @@ public class FolderBrowserActivity extends Activity {
         String fileIndent = "margin-left: " + ((depth * 20) + 20) + "px;";
 
         for (FileNode file : folder.files) {
-            // Created & Modified captions (Created first)
+            // Compact caption: Created d MMM | yy • Modified d MMM | yy
             final long created  = CreationIndex.get(this).getOrInfer(file.file);
             final long modified = file.file.lastModified();
 
-            final int flags = DateUtils.FORMAT_SHOW_DATE
-                    | DateUtils.FORMAT_SHOW_TIME
-                    | DateUtils.FORMAT_ABBREV_MONTH;
+            final java.text.SimpleDateFormat sdfDM =
+                    new java.text.SimpleDateFormat("d MMM", java.util.Locale.getDefault());
+            final java.text.SimpleDateFormat sdfYY =
+                    new java.text.SimpleDateFormat("yy",     java.util.Locale.getDefault());
 
-            final String createdStr  = DateUtils.formatDateTime(this, created,  flags);
-            final String modifiedStr = DateUtils.formatDateTime(this, modified, flags);
+            final String cShort = sdfDM.format(new java.util.Date(created))
+                    + " <span class='sep'>|</span> " + sdfYY.format(new java.util.Date(created));
+            final String mShort = sdfDM.format(new java.util.Date(modified))
+                    + " <span class='sep'>|</span> " + sdfYY.format(new java.util.Date(modified));
 
-            String dateStr = "<div class='note-meta'>Created " + createdStr
-                    + " <span class='sep'>•</span> Modified " + modifiedStr + "</div>";
+            final String dateStr = "<div class='note-meta'>Created " + cShort
+                    + " <span class='sep'>•</span> Modified " + mShort + "</div>";
 
             String baseName = file.name.replaceAll("\\.md$", "");
             boolean isLongTitle = baseName.length() >= TITLE_LEN_THRESHOLD;
