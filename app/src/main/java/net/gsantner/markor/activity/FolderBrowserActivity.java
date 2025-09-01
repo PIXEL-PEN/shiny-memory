@@ -236,7 +236,7 @@ public class FolderBrowserActivity extends Activity {
                 .append(".dot-flag.empty { background:transparent; border:1px solid #d35400; }")
                 .append(".note-title { font-size: 17px; font-weight: 500; margin-left:2px; }")
                 .append(".note-meta  { font-size: 12px; color: #6e6e6e; margin-left: 0; white-space: nowrap; display: block; }")
-                .append(".note-meta span.sep { padding: 0 .07px; }")
+                .append(".note-meta span.sep { padding: 0 .06px; }")
                 .append(".year { font-size: 19px; font-weight: bold; }")
                 .append(".month { font-size: 18px; font-weight: bold; }")
                 .append(".category { font-size: 16px; font-weight: bold; }")
