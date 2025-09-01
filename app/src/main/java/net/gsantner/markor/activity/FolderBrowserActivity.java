@@ -305,6 +305,10 @@ public class FolderBrowserActivity extends Activity {
             final java.text.SimpleDateFormat sdfYr  =
                     new java.text.SimpleDateFormat("yy",  java.util.Locale.getDefault());
 
+            // formatter for compact Modified: "31 Aug"
+            final java.text.SimpleDateFormat sdfMod =
+                    new java.text.SimpleDateFormat("d MMM", java.util.Locale.getDefault());
+
             final long EPS_MS = 60_000L; // >1 min = meaningfully later
 
             String cShort = sdfWk.format(new java.util.Date(created))
@@ -314,10 +318,7 @@ public class FolderBrowserActivity extends Activity {
 
             String dateStr;
             if ((modified - created) > EPS_MS) {
-                String mShort = sdfWk.format(new java.util.Date(modified))
-                        + " <span class='sep'>|</span> " + sdfDay.format(new java.util.Date(modified))
-                        + " " + sdfMon.format(new java.util.Date(modified))
-                        + " <span class='sep'>|</span> " + sdfYr.format(new java.util.Date(modified));
+                String mShort = "(" + sdfMod.format(new java.util.Date(modified)) + ")";
                 dateStr = "<div class='note-meta'>" + cShort
                         + " <span class='sep'>•</span> " + mShort + "</div>";
             } else {

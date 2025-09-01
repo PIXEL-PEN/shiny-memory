@@ -36,7 +36,6 @@ public class FolderTreeAdapter extends RecyclerView.Adapter<FolderTreeAdapter.No
                 .inflate(R.layout.folder_tree_item, parent, false);
         return new NodeViewHolder(view);
     }
-
     @Override
     public void onBindViewHolder(NodeViewHolder holder, int position) {
         Object item = visibleItems.get(position);
@@ -63,15 +62,15 @@ public class FolderTreeAdapter extends RecyclerView.Adapter<FolderTreeAdapter.No
 
             if (depth == 2) {
                 holder.name.setTextSize(19);
-                holder.name.setTypeface(Typeface.DEFAULT);
+                holder.name.setTypeface(android.graphics.Typeface.DEFAULT);
                 holder.name.setTextColor(android.graphics.Color.DKGRAY);
             } else if (depth == 3) {
                 holder.name.setTextSize(17);
-                holder.name.setTypeface(Typeface.DEFAULT_BOLD);
+                holder.name.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
                 holder.name.setTextColor(android.graphics.Color.BLACK);
             } else {
                 holder.name.setTextSize(16);
-                holder.name.setTypeface(Typeface.DEFAULT);
+                holder.name.setTypeface(android.graphics.Typeface.DEFAULT);
                 holder.name.setTextColor(android.graphics.Color.BLACK);
             }
 
@@ -84,9 +83,17 @@ public class FolderTreeAdapter extends RecyclerView.Adapter<FolderTreeAdapter.No
         } else if (item instanceof FileNode) {
             FileNode file = (FileNode) item;
             holder.icon.setText("\uD83D\uDCC4");
-            holder.name.setText(file.name);
+
+            // Format "31 Aug" for modified date
+            String modifiedText = "";
+            if (file.file != null && file.file.exists()) {
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("d MMM", java.util.Locale.getDefault());
+                modifiedText = " • (" + sdf.format(new java.util.Date(file.file.lastModified())) + ")";
+            }
+
+            holder.name.setText(file.name + modifiedText);
             holder.name.setTextSize(16);
-            holder.name.setTypeface(Typeface.DEFAULT);
+            holder.name.setTypeface(android.graphics.Typeface.DEFAULT);
             holder.name.setTextColor(android.graphics.Color.BLACK);
 
             int padding = 20 * file.depth;
@@ -98,54 +105,8 @@ public class FolderTreeAdapter extends RecyclerView.Adapter<FolderTreeAdapter.No
             );
 
             holder.itemView.setOnClickListener(v -> {
-                // 1) Use the actual scanned file first
                 java.io.File noteFile = file.file;
-
-                // 2) If missing (e.g., ultra-long title truncated by FS), try best prefix match
-                if (noteFile == null || !noteFile.isFile()) {
-                    java.io.File parent = (noteFile != null) ? noteFile.getParentFile() : null;
-                    if (parent == null && file.file != null) {
-                        parent = file.file.getParentFile();
-                    }
-                    if (parent != null && parent.isDirectory()) {
-                        java.io.File fallback = findBestPrefixMatch(parent, file.name);
-                        if (fallback != null && fallback.isFile()) {
-                            noteFile = fallback;
-                        }
-                    }
-                }
-
-                if (noteFile != null && noteFile.isFile()) {
-                    String fname = noteFile.getName().toLowerCase(java.util.Locale.ROOT);
-                    boolean isHtml = fname.endsWith(".html") || fname.endsWith(".htm");
-
-                    if (isHtml) {
-                        // Open HTML in our FileOpenActivity (explicit component)
-                        // -- HTML path (no direct FileOpenActivity reference) --
-                        android.net.Uri uri = androidx.core.content.FileProvider.getUriForFile(
-                                v.getContext(),
-                                BuildConfig.APPLICATION_ID + ".provider",   // IMPORTANT: .provider (not .fileprovider)
-                                noteFile
-                        );
-                        android.content.Intent i = new android.content.Intent(android.content.Intent.ACTION_VIEW);
-                        i.setDataAndType(uri, "text/html");
-                        i.addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION);
-// Force resolution to THIS app (prevents the original Markor/browser)
-                        i.setPackage(v.getContext().getPackageName());
-                        v.getContext().startActivity(i);
-
-                    } else {
-                        // Open text docs in our DocumentActivity (explicit component)
-                        android.content.Intent i = new android.content.Intent(
-                                v.getContext(), net.gsantner.markor.activity.DocumentActivity.class);
-                        i.putExtra(net.gsantner.markor.model.Document.EXTRA_FILE, noteFile);
-                        i.putExtra(net.gsantner.markor.model.Document.EXTRA_DO_PREVIEW, true);
-                        v.getContext().startActivity(i);
-                    }
-                } else {
-                    android.widget.Toast.makeText(v.getContext(), "File not found", android.widget.Toast.LENGTH_SHORT).show();
-                    android.util.Log.e("FolderTree", "⚠️ Missing file: " + file.name);
-                }
+                // TODO: handle file open
             });
         }
     }

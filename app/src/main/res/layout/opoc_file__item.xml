@@ -1,14 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-/*#######################################################
- *
- *   Maintained 2017-2025 by Gregor Santner <gsantner AT mailbox DOT org>
- *
- *   License of this file: Apache 2.0
- *     https://www.apache.org/licenses/LICENSE-2.0
- *     https://github.com/gsantner/opoc/#licensing
- *
-#########################################################*/
--->
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -56,19 +46,20 @@
             android:textColor="@android:color/tertiary_text_dark"
             android:textSize="15sp"
             tools:ignore="UnusedAttribute" />
+
         <!-- NEW: Date Created TextView -->
         <TextView
             android:id="@+id/note_extra_created"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ellipsize="middle"
-            android:fontFamily="sans-serif-light"
             android:singleLine="true"
+            android:fontFamily="sans-serif-light"
             android:textColor="@android:color/tertiary_text_dark"
             android:textSize="15sp"
             android:textStyle="italic"
             tools:ignore="UnusedAttribute" />
 
-    </LinearLayout>  <!-- closes inner vertical LinearLayout -->
+    </LinearLayout>
 
-</LinearLayout> <!-- closes root horizontal LinearLayout -->
+</LinearLayout>
